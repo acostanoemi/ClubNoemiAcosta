@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'widgets/shared_widgets.dart';
+import 'screens/register_screen.dart';
 
 void main() {
   runApp(const ClubApp());
@@ -24,22 +26,41 @@ class ClubApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
       },
       builder: (context, child) {
+        // Lienzo "teléfono" fijo de 412x892 (el mismo tamaño de diseño del
+        // Figma), pero escalado para entrar siempre completo en la ventana
+        // del navegador, sea cual sea su alto. Antes se recortaba si la
+        // ventana medía menos de 892px de alto; ahora se achica en vez de
+        // cortarse.
+        const designWidth = 412.0;
+        const designHeight = 892.0;
+
         return Container(
           color: const Color(0xFF000000),
           child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 412,
-                maxHeight: 892,
-              ),
-              child: MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  size: const Size(412, 892),
-                ),
-                child: child!,
-              ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final scale = (constraints.maxWidth / designWidth) <
+                        (constraints.maxHeight / designHeight)
+                    ? constraints.maxWidth / designWidth
+                    : constraints.maxHeight / designHeight;
+
+                return Transform.scale(
+                  scale: scale,
+                  child: SizedBox(
+                    width: designWidth,
+                    height: designHeight,
+                    child: MediaQuery(
+                      data: MediaQuery.of(context).copyWith(
+                        size: const Size(designWidth, designHeight),
+                      ),
+                      child: child!,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         );
@@ -58,7 +79,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _loading = false;
-  final Color _accentColor = const Color(0xFFD4FF00);
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -114,206 +134,165 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/Image.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.88),
-                    Colors.black.withValues(alpha: 0.88),
-                    Colors.black.withValues(alpha: 0.84),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'BIENVENIDO A',
-                      style: TextStyle(
-                        color: _accentColor,
-                        fontSize: 10,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 4,
-                      ),
+      body: AppBackground(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'BIENVENIDO A',
+                    style: TextStyle(
+                      color: kAccentColor,
+                      fontSize: 10,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 4,
                     ),
-                    const SizedBox(height: 6),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          const TextSpan(text: 'CLUB ', style: TextStyle(color: Colors.white)),
-                          TextSpan(text: 'NOEMI ACOSTA', style: TextStyle(color: _accentColor)),
-                        ],
-                      ),
-                      style: const TextStyle(
-                        fontSize: 38,
-                        fontFamily: 'Barlow Condensed',
-                        fontWeight: FontWeight.w900,
-                        height: 1.1,
-                      ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text.rich(
+                    const TextSpan(
+                      children: [
+                        TextSpan(text: 'CLUB ', style: TextStyle(color: Colors.white)),
+                        TextSpan(text: 'NOEMI ACOSTA', style: TextStyle(color: kAccentColor)),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Gestión de espacios deportivos',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.38),
-                        fontSize: 13,
-                        fontFamily: 'Inter',
-                      ),
+                    style: const TextStyle(
+                      fontSize: 38,
+                      fontFamily: 'Barlow Condensed',
+                      fontWeight: FontWeight.w900,
+                      height: 1.1,
                     ),
-                    const SizedBox(height: 36),
-                    TextField(
-                      controller: _emailController,
-                      style: const TextStyle(color: Colors.white),
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: _buildInputDecoration('Email'),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Gestión de espacios deportivos',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.38),
+                      fontSize: 13,
+                      fontFamily: 'Inter',
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _buildInputDecoration('Contraseña').copyWith(
-                        suffixIcon: IconButton(
-                          icon: SvgPicture.asset(
-                              'assets/icons/Icon.svg',
-                              width: 16,
-                              height: 16,
-                            ),
-                          onPressed: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
+                  ),
+                  const SizedBox(height: 36),
+                  TextField(
+                    controller: _emailController,
+                    style: const TextStyle(color: Colors.white),
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: buildInputDecoration('Email'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: buildInputDecoration('Contraseña').copyWith(
+                      suffixIcon: IconButton(
+                        icon: SvgPicture.asset(
+                            'assets/icons/Icon.svg',
+                            width: 16,
+                            height: 16,
+                          ),
                         onPressed: () {
-                          // Navigator.pushNamed(context, '/forgot-password');
+                          setState(() => _obscurePassword = !_obscurePassword);
                         },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          '¿Olvidaste tu contraseña?',
-                          style: TextStyle(
-                            color: _accentColor,
-                            fontSize: 12,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w800,
-                          ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        // Navigator.pushNamed(context, '/forgot-password');
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        '¿Olvidaste tu contraseña?',
+                        style: TextStyle(
+                          color: kAccentColor,
+                          fontSize: 12,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _loading ? null : _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _accentColor,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
-                        ),
-                        child: _loading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                              )
-                            : const Text(
-                                'INICIAR SESIÓN',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontFamily: 'Barlow Condensed',
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.5,
-                                ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: _loading ? null : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kAccentColor,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                      child: _loading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                            )
+                          : const Text(
+                              'INICIAR SESIÓN',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontFamily: 'Barlow Condensed',
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.5,
                               ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10))),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text('o', style: TextStyle(color: Colors.white.withValues(alpha: 0.20), fontSize: 12, fontFamily: 'Inter')),
-                        ),
-                        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10))),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '¿No tenés cuenta? ',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.34), fontSize: 13, fontFamily: 'Inter'),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            // Navigator.pushNamed(context, '/register');
-                          },
-                          child: Text(
-                            'COMENZAR →',
-                            style: TextStyle(
-                              color: _accentColor,
-                              fontSize: 13,
-                              fontFamily: 'Barlow Condensed',
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5,
                             ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10))),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('o', style: TextStyle(color: Colors.white.withValues(alpha: 0.20), fontSize: 12, fontFamily: 'Inter')),
+                      ),
+                      Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10))),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '¿No tenés cuenta? ',
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.34), fontSize: 13, fontFamily: 'Inter'),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/register');
+                        },
+                        child: Text(
+                          'COMENZAR →',
+                          style: TextStyle(
+                            color: kAccentColor,
+                            fontSize: 13,
+                            fontFamily: 'Barlow Condensed',
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  InputDecoration _buildInputDecoration(String label) {
-    return InputDecoration(
-      hintText: label,
-      hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.30), fontSize: 14, fontFamily: 'Inter'),
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.08),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14), width: 1.13),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _accentColor, width: 1.5),
+        ),
       ),
     );
   }
