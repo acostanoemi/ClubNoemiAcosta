@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/shared_widgets.dart';
+import '../theme/app_theme.dart';
 import 'email_enviado_screen.dart';
 
 // Mismo host que main.dart usa para /auth/login y register_screen.dart para /auth/register.
@@ -159,12 +160,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ErrorBanner(message: _errorBanner!),
                 ],
                 const SizedBox(height: 24),
-                FieldLabel('EMAIL *', hasError: _fieldErrors.contains('email')),
+                FieldLabel('EMAIL *', hasError: _fieldErrors.contains('email'), colorsOverride: AppColors.dark),
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: const TextStyle(color: Colors.white),
-                  decoration: buildInputDecoration(context, 'juan@email.com', hasError: _fieldErrors.contains('email')),
+                  decoration: buildInputDecoration(context, 'juan@email.com', hasError: _fieldErrors.contains('email'), colorsOverride: AppColors.dark),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
