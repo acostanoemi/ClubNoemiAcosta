@@ -4,6 +4,12 @@ import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'widgets/shared_widgets.dart';
 import 'screens/register_screen.dart';
+import 'screens/forgot_password_screen.dart';
+import 'session.dart';
+import 'screens/mi_perfil_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/sedes_screen.dart';
+
 
 void main() {
   runApp(const ClubApp());
@@ -27,6 +33,10 @@ class ClubApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/forgot': (context) => const ForgotPasswordScreen(),
+        '/perfil': (context) => const MiPerfilScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/sedes': (context) => const SedesScreen(),
       },
       builder: (context, child) {
         // Lienzo "teléfono" fijo de 412x892 (el mismo tamaño de diseño del
@@ -110,10 +120,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login exitoso')),
+            if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        Session.set(
+          id: data['id'],
+          email: data['email'],
+          nombre: data['nombre'],
+          apellido: data['apellido'],
         );
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/home');
       } else {
         final data = jsonDecode(response.body);
         _showError(data['detail'] ?? 'No se pudo iniciar sesión');
@@ -131,8 +147,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
+    final nombre = Session.nombre ?? '';
+    final apellido = Session.apellido ?? '';
+    final iniciales = (nombre.isNotEmpty && apellido.isNotEmpty) ? '${nombre[0]}${apellido[0]}' : '?';
+
     return Scaffold(
       body: AppBackground(
         child: SafeArea(
@@ -195,6 +215,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: 16,
                             height: 16,
                           ),
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
                         onPressed: () {
                           setState(() => _obscurePassword = !_obscurePassword);
                         },
@@ -206,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // Navigator.pushNamed(context, '/forgot-password');
+                        Navigator.pushNamed(context, '/forgot');
                       },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,

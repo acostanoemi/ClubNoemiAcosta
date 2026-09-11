@@ -30,7 +30,10 @@ class UsuarioResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
+class ChangePassword(BaseModel):
+    email: EmailStr
+    current_password: str
+    new_password: str
 # --- SEDES ---
 class SedeCreate(BaseModel):
     nombre: str
@@ -41,7 +44,7 @@ class SedeCreate(BaseModel):
 
 class SedeResponse(BaseModel):
     id: UUID
-    nombre: str
+    nombre: Optional[str] = None
     direccion: str
     hora_apertura: time
     hora_cierre: time
@@ -89,3 +92,6 @@ class ReservaResponse(BaseModel):
 
     class Config:
         from_attributes = True
+class SedeUpdate(BaseModel):
+    nombre: Optional[str] = None
+

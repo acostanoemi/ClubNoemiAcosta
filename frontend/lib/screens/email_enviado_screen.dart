@@ -38,7 +38,7 @@ class EmailEnviadoScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
               const Text(
-                'RECUPERACIÓN',
+                'RECUPERACIÃ“N',
                 style: TextStyle(
                   color: Color(0xFFD4FF00),
                   fontSize: 10,
@@ -51,7 +51,7 @@ class EmailEnviadoScreen extends StatelessWidget {
                 text: const TextSpan(
                   children: [
                     TextSpan(
-                      text: 'OLVIDÉ MI ',
+                      text: 'OLVIDÃ‰ MI ',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 36,
@@ -60,7 +60,7 @@ class EmailEnviadoScreen extends StatelessWidget {
                       ),
                     ),
                     TextSpan(
-                      text: 'CONTRASEÑA',
+                      text: 'CONTRASEÃ‘A',
                       style: TextStyle(
                         color: Color(0xFFD4FF00),
                         fontSize: 36,
@@ -73,7 +73,7 @@ class EmailEnviadoScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Ingresá tu email y te enviaremos un enlace.',
+                'IngresÃ¡ tu email y te enviaremos un enlace.',
                 style: TextStyle(
                   color: Colors.white38,
                   fontSize: 12,
@@ -93,10 +93,22 @@ class EmailEnviadoScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text('??', style: TextStyle(fontSize: 48)),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD4FF00).withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.mark_email_read_outlined,
+                        color: Color(0xFFD4FF00),
+                        size: 32,
+                      ),
+                    ),
                     const SizedBox(height: 14),
                     const Text(
-                      '¡Enlace enviado!',
+                      'Â¡Enlace enviado!',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -109,7 +121,7 @@ class EmailEnviadoScreen extends StatelessWidget {
                       text: TextSpan(
                         children: [
                           const TextSpan(
-                            text: 'Revisá tu bandeja en ',
+                            text: 'RevisÃ¡ tu bandeja en ',
                             style: TextStyle(
                               color: Colors.white38,
                               fontSize: 13,

@@ -77,6 +77,19 @@ def recover_password(data: schemas.RecoverPassword, db: Session = Depends(get_db
     db.commit()
     return {"message": "Contraseña actualizada exitosamente"}
 
+@app.put("/auth/change-password")
+def change_password(data: schemas.ChangePassword, db: Session = Depends(get_db)):
+    user = db.query(models.Usuario).filter(models.Usuario.email.ilike(data.email.strip().lower())).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if user.password.strip() != data.current_password.strip():
+        raise HTTPException(status_code=401, detail="La contraseña actual no es correcta")
+
+    user.password = data.new_password
+    db.commit()
+    return {"message": "Contraseña actualizada exitosamente"}
+
 # --- SEDES ---
 
 @app.get("/sedes", response_model=List[schemas.SedeResponse])
@@ -90,6 +103,16 @@ def crear_sede(sede: schemas.SedeCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nueva_sede)
     return nueva_sede
+
+@app.patch("/sedes/{sede_id}")
+def actualizar_sede(sede_id: UUID, datos: schemas.SedeUpdate, db: Session = Depends(get_db)):
+    sede = db.query(models.Sede).filter(models.Sede.id == sede_id).first()
+    if not sede:
+        raise HTTPException(status_code=404, detail="Sede no encontrada")
+    if datos.nombre is not None:
+        sede.nombre = datos.nombre
+    db.commit()
+    return {"message": "Sede actualizada"}
 
 # --- ESPACIOS DEPORTIVOS ---
 
@@ -169,3 +192,12 @@ def cancelar_reserva(reserva_id: UUID, db: Session = Depends(get_db)):
     reserva.estado = "cancelada"
     db.commit()
     return {"message": "Reserva cancelada exitosamente"}
+
+@app.delete("/espacios/{espacio_id}")
+def eliminar_espacio(espacio_id: UUID, db: Session = Depends(get_db)):
+    espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == espacio_id).first()
+    if not espacio:
+        raise HTTPException(status_code=404, detail="Espacio no encontrado")
+    db.delete(espacio)
+    db.commit()
+    return {"message": "Espacio eliminado"}
