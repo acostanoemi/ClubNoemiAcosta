@@ -279,7 +279,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
           children: [
             _navItem(colors, Icons.home_outlined, 'INICIO', false, () => Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false)),
             _navItem(colors, Icons.apartment_outlined, 'SEDES', false, () => Navigator.pushNamedAndRemoveUntil(context, '/sedes', (r) => false)),
-            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () {}),
+            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => Navigator.pushNamedAndRemoveUntil(context, '/reservas', (r) => false)),
             _navItem(colors, Icons.person, 'PERFIL', true, () {}),
           ],
         ),

@@ -9,10 +9,8 @@ import 'sede_detalle_screen.dart';
 
 const String _apiBaseUrl = "http://localhost:8000";
 
-// Mismo recorte de horario que Home (el backend devuelve "08:00:00").
 String _hhmm(String hora) => hora.length >= 5 ? hora.substring(0, 5) : hora;
 
-// Paleta cíclica para diferenciar tarjetas sin depender de fotos reales.
 const _gradientesSede = [
   [Color(0xFF0D1B2A), Color(0xFF050508)],
   [Color(0xFF141C0A), Color(0xFF050508)],
@@ -241,7 +239,7 @@ class _SedesScreenState extends State<SedesScreen> {
           children: [
             _navItem(context, Icons.home_outlined, 'INICIO', false, () => Navigator.pushReplacementNamed(context, '/home')),
             _navItem(context, Icons.apartment, 'SEDES', true, () {}),
-            _navItem(context, Icons.calendar_today_outlined, 'RESERVAS', false, () {}),
+            _navItem(context, Icons.calendar_today_outlined, 'RESERVAS', false, () => Navigator.pushNamed(context, '/reservas')),
             _navItem(context, Icons.person_outline, 'PERFIL', false, () => Navigator.pushNamed(context, '/perfil')),
           ],
         ),

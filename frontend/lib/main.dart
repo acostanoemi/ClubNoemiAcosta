@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,6 +9,7 @@ import 'session.dart';
 import 'screens/mi_perfil_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/sedes_screen.dart';
+import 'screens/mis_reservas_screen.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 import 'theme/theme_scope.dart';
@@ -17,8 +18,6 @@ void main() {
   runApp(const ClubApp());
 }
 
-// Para probar en Chrome/Web usamos localhost.
-// Para el emulador de Android hay que cambiar esto a "http://10.0.2.2:8000".
 const String apiBaseUrl = "http://localhost:8000";
 
 class ClubApp extends StatefulWidget {
@@ -51,13 +50,9 @@ class _ClubAppState extends State<ClubApp> {
               '/perfil': (context) => const MiPerfilScreen(),
               '/home': (context) => const HomeScreen(),
               '/sedes': (context) => const SedesScreen(),
+              '/reservas': (context) => const MisReservasScreen(),
             },
             builder: (context, child) {
-              // Lienzo "teléfono" fijo de 412x892 (el mismo tamaño de diseño del
-              // Figma), pero escalado para entrar siempre completo en la ventana
-              // del navegador, sea cual sea su alto. Antes se recortaba si la
-              // ventana medía menos de 892px de alto; ahora se achica en vez de
-              // cortarse.
               const designWidth = 412.0;
               const designHeight = 892.0;
 

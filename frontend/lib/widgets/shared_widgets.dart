@@ -7,7 +7,13 @@ import '../theme/app_theme.dart';
 /// borrar cuando ya no quede ninguna referencia.
 const Color kAccentColor = Color(0xFFD4FF00);
 
-/// Fondo compartido: foto de fondo + gradiente, usado en Login y Register.
+/// Fondo compartido: foto de fondo + gradiente, usado en Login, Register y
+/// ForgotPassword. Estas pantallas van SIEMPRE en modo oscuro, sin importar
+/// el tema elegido por el usuario en Mi Perfil — el toggle claro/oscuro
+/// aplica solo a la parte logueada de la app (Home, Sedes, Mi Perfil...).
+/// El Figma nunca mostró una versión clara de estas pantallas: la foto +
+/// overlay oscuro es el diseño fijo. Por eso se fuerza buildDarkTheme() acá,
+/// en un solo lugar, en vez de tocar cada pantalla que usa este widget.
 class AppBackground extends StatelessWidget {
   final Widget child;
 
@@ -15,36 +21,39 @@ class AppBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: Image.asset(
-            'assets/images/Image.png',
-            fit: BoxFit.cover,
+    final colors = AppColors.dark;
+    return Theme(
+      data: buildDarkTheme(),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/Image.png',
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  colors.overlayScrim,
-                  colors.overlayScrim,
-                  colors.overlayScrim.withValues(alpha: colors.overlayScrim.a * 0.95),
-                ],
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    colors.overlayScrim,
+                    colors.overlayScrim,
+                    colors.overlayScrim.withValues(alpha: colors.overlayScrim.a * 0.95),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        // El contenido va envuelto en Positioned.fill también. Si no,
-        // el Stack termina midiendo lo mismo que el contenido (por ejemplo
-        // un SingleChildScrollView se achica al alto de sus campos), y el
-        // fondo se corta justo ahí en vez de cubrir toda la pantalla.
-        Positioned.fill(child: child),
-      ],
+          // El contenido va envuelto en Positioned.fill también. Si no,
+          // el Stack termina midiendo lo mismo que el contenido (por ejemplo
+          // un SingleChildScrollView se achica al alto de sus campos), y el
+          // fondo se corta justo ahí en vez de cubrir toda la pantalla.
+          Positioned.fill(child: child),
+        ],
+      ),
     );
   }
 }
