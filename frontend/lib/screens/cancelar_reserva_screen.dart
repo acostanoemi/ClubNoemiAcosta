@@ -113,7 +113,7 @@ class _CancelarReservaScreenState extends State<CancelarReservaScreen> {
                     const SizedBox(height: 12),
                     Divider(height: 1, color: colors.surfaceBorder),
                     const SizedBox(height: 12),
-                    Text(formatearMonto(reserva.montoTotal), style: TextStyle(color: colors.accent, fontSize: 22, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
+                    Text(formatearMonto(reserva.montoTotal), style: TextStyle(color: colors.accentText, fontSize: 22, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
                   ],
                 ),
               ),

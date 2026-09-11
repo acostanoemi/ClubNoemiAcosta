@@ -168,3 +168,16 @@ class DniInputFormatter extends TextInputFormatter {
     );
   }
 }
+
+/// Colores distintos por deporte, usados en los tags de las tarjetas de
+/// sede (Home, Sedes) -- no confundir con `accent`, que es el color de
+/// marca general de la app.
+const Map<String, Color> coloresDeporte = {
+  'Fútbol': Color(0xFF2ECC71),
+  'Tenis': Color(0xFFE67E22),
+  'Hockey': Color(0xFF9B59B6),
+  'Golf': Color(0xFFD4AC0D),
+  'Vóley': Color(0xFF1F618D),
+};
+
+Color colorDeporte(String deporte) => coloresDeporte[deporte] ?? kAccentColor;

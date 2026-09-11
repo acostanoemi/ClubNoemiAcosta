@@ -238,7 +238,7 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(color: colors.textSecondary, fontSize: 14, fontFamily: 'Inter')),
-          Text(valor, style: TextStyle(color: valorVerde ? colors.accent : colors.textPrimary, fontSize: 14, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
+          Text(valor, style: TextStyle(color: valorVerde ? colors.accentText : colors.textPrimary, fontSize: 14, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
         ],
       ),
     );

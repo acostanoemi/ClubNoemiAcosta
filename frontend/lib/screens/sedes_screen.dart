@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/shared_widgets.dart';
+import '../theme/app_theme.dart';
 import '../models/sede.dart';
 import '../models/espacio.dart';
 import '../session.dart';
@@ -11,6 +12,9 @@ const String _apiBaseUrl = "http://localhost:8000";
 
 String _hhmm(String hora) => hora.length >= 5 ? hora.substring(0, 5) : hora;
 
+// El banner de cada tarjeta de sede no tiene foto real (no hay assets de
+// fotografía en el proyecto -- mismo criterio que Home, HorariosBottomSheet,
+// Mis Reservas, etc.), así que se usa un degradado cíclico por índice.
 const _gradientesSede = [
   [Color(0xFF0D1B2A), Color(0xFF050508)],
   [Color(0xFF141C0A), Color(0xFF050508)],
@@ -70,15 +74,17 @@ class _SedesScreenState extends State<SedesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     if (!Session.estaLogueado) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
       });
-      return const Scaffold(backgroundColor: Color(0xFF050508));
+      return Scaffold(backgroundColor: colors.background);
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF050508),
+      backgroundColor: colors.background,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _cargarDatos,
@@ -92,25 +98,25 @@ class _SedesScreenState extends State<SedesScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('CLUB NOEMI ACOSTA', style: TextStyle(color: kAccentColor, fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 3)),
+                      Text('CLUB SPORT', style: TextStyle(color: colors.accentText, fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 3)),
                       const SizedBox(height: 4),
                       Text.rich(
-                        const TextSpan(
+                        TextSpan(
                           children: [
-                            TextSpan(text: 'TODAS LAS ', style: TextStyle(color: Colors.white)),
-                            TextSpan(text: 'SEDES', style: TextStyle(color: kAccentColor)),
+                            TextSpan(text: 'TODAS LAS ', style: TextStyle(color: colors.textPrimary)),
+                            TextSpan(text: 'SEDES', style: TextStyle(color: colors.accentText)),
                           ],
                         ),
                         style: const TextStyle(fontSize: 32, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900),
                       ),
                       const SizedBox(height: 4),
                       if (!_loading)
-                        Text('${_sedes.length} sedes · ${_espacios.length} canchas disponibles', style: TextStyle(color: Colors.white.withValues(alpha: 0.40), fontSize: 13, fontFamily: 'Inter')),
+                        Text('${_sedes.length} sedes · ${_espacios.length} canchas disponibles', style: TextStyle(color: colors.textMuted, fontSize: 13, fontFamily: 'Inter')),
                     ],
                   ),
                 ),
                 if (_loading)
-                  const Padding(padding: EdgeInsets.symmetric(vertical: 60), child: Center(child: CircularProgressIndicator(color: kAccentColor)))
+                  Padding(padding: const EdgeInsets.symmetric(vertical: 60), child: Center(child: CircularProgressIndicator(color: colors.accent)))
                 else if (_error != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -118,7 +124,7 @@ class _SedesScreenState extends State<SedesScreen> {
                       children: [
                         Text(_error!, style: TextStyle(color: Colors.red[300], fontFamily: 'Inter')),
                         const SizedBox(height: 8),
-                        TextButton(onPressed: _cargarDatos, child: const Text('Reintentar', style: TextStyle(color: kAccentColor))),
+                        TextButton(onPressed: _cargarDatos, child: Text('Reintentar', style: TextStyle(color: colors.accentText))),
                       ],
                     ),
                   )
@@ -152,7 +158,7 @@ class _SedesScreenState extends State<SedesScreen> {
                                       decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(10)),
                                       child: Column(
                                         children: [
-                                          Text('$cantCanchas', style: const TextStyle(color: kAccentColor, fontSize: 16, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
+                                          Text('$cantCanchas', style: const TextStyle(color: Color(0xFFD4FF00), fontSize: 16, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
                                           Text('canchas', style: TextStyle(color: Colors.white.withValues(alpha: 0.60), fontSize: 9, fontFamily: 'Inter')),
                                         ],
                                       ),
@@ -183,7 +189,7 @@ class _SedesScreenState extends State<SedesScreen> {
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: colors.surface,
                               child: Row(
                                 children: [
                                   Expanded(
@@ -191,10 +197,11 @@ class _SedesScreenState extends State<SedesScreen> {
                                       spacing: 6,
                                       runSpacing: 6,
                                       children: deportes.map((d) {
+                                        final colorD = colorDeporte(d);
                                         return Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(color: kAccentColor.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(20)),
-                                          child: Text(d, style: const TextStyle(color: kAccentColor, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                                          decoration: BoxDecoration(color: colorD.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(20)),
+                                          child: Text(d, style: TextStyle(color: colorD, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
                                         );
                                       }).toList(),
                                     ),
@@ -205,12 +212,12 @@ class _SedesScreenState extends State<SedesScreen> {
                                         builder: (_) => SedeDetalleScreen(sede: s),
                                       ));
                                     },
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text('Ver canchas', style: TextStyle(color: kAccentColor, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
-                                        SizedBox(width: 2),
-                                        Icon(Icons.arrow_forward, color: kAccentColor, size: 14),
+                                        Text('Ver canchas', style: TextStyle(color: colors.accentText, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                                        const SizedBox(width: 2),
+                                        Icon(Icons.arrow_forward, color: colors.accentText, size: 14),
                                       ],
                                     ),
                                   ),
@@ -231,24 +238,24 @@ class _SedesScreenState extends State<SedesScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF0A0A0E),
-          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+          color: colors.bottomSheetBackground,
+          border: Border(top: BorderSide(color: colors.surfaceBorder)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _navItem(context, Icons.home_outlined, 'INICIO', false, () => Navigator.pushReplacementNamed(context, '/home')),
-            _navItem(context, Icons.apartment, 'SEDES', true, () {}),
-            _navItem(context, Icons.calendar_today_outlined, 'RESERVAS', false, () => Navigator.pushNamed(context, '/reservas')),
-            _navItem(context, Icons.person_outline, 'PERFIL', false, () => Navigator.pushNamed(context, '/perfil')),
+            _navItem(colors, Icons.home_outlined, 'INICIO', false, () => Navigator.pushReplacementNamed(context, '/home')),
+            _navItem(colors, Icons.apartment, 'SEDES', true, () {}),
+            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => Navigator.pushNamed(context, '/reservas')),
+            _navItem(colors, Icons.person_outline, 'PERFIL', false, () => Navigator.pushNamed(context, '/perfil')),
           ],
         ),
       ),
     );
   }
 
-  Widget _navItem(BuildContext context, IconData icon, String label, bool active, VoidCallback onTap) {
-    final color = active ? kAccentColor : Colors.white38;
+  Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
+    final color = active ? colors.accentText : colors.textMuted;
     return GestureDetector(
       onTap: onTap,
       child: Column(

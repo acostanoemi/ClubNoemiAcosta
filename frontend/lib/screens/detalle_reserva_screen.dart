@@ -45,7 +45,7 @@ class DetalleReservaScreen extends StatelessWidget {
                 TextSpan(
                   children: [
                     TextSpan(text: 'DETALLE DE ', style: TextStyle(color: colors.textPrimary)),
-                    TextSpan(text: 'LA RESERVA', style: TextStyle(color: colors.accent)),
+                    TextSpan(text: 'LA RESERVA', style: TextStyle(color: colors.accentText)),
                   ],
                 ),
                 style: const TextStyle(fontSize: 30, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, height: 1.1),
@@ -64,7 +64,7 @@ class DetalleReservaScreen extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       item.esActiva ? 'Activa' : 'Completada',
-                      style: TextStyle(color: item.esActiva ? colors.accent : Colors.green[400], fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800),
+                      style: TextStyle(color: item.esActiva ? colors.accentText : Colors.green[400], fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800),
                     ),
                   ],
                 ),
@@ -110,7 +110,7 @@ class DetalleReservaScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Total', style: TextStyle(color: colors.textSecondary, fontSize: 14, fontFamily: 'Inter')),
-                        Text(formatearMonto(reserva.montoTotal), style: TextStyle(color: colors.accent, fontSize: 26, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
+                        Text(formatearMonto(reserva.montoTotal), style: TextStyle(color: colors.accentText, fontSize: 26, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
                       ],
                     ),
                   ],

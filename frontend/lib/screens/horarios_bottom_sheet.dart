@@ -255,7 +255,7 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text('${_horaSeleccionada!.toString().padLeft(2, '0')}:00 – ${(_horaSeleccionada! + _duracionHoras).toString().padLeft(2, '0')}:00', style: TextStyle(color: colors.accent, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
+                                      Text('${_horaSeleccionada!.toString().padLeft(2, '0')}:00 – ${(_horaSeleccionada! + _duracionHoras).toString().padLeft(2, '0')}:00', style: TextStyle(color: colors.accentText, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
                                       Text(_formatearFechaCorta(_fechaSeleccionada), style: TextStyle(color: colors.textMuted, fontSize: 12, fontFamily: 'Inter')),
                                     ],
                                   ),
