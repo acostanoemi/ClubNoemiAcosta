@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, date
 
 import models, schemas, database
 
@@ -136,10 +136,15 @@ def crear_espacio(espacio: schemas.EspacioCreate, db: Session = Depends(get_db))
 # --- RESERVAS ---
 
 @app.get("/reservas", response_model=List[schemas.ReservaResponse])
-def obtener_reservas(usuario_id: Optional[UUID] = None, db: Session = Depends(get_db)):
+def obtener_reservas(usuario_id: Optional[UUID] = None, espacio_id: Optional[UUID] = None, fecha: Optional[date] = None, db: Session = Depends(get_db)):
     query = db.query(models.Reserva)
     if usuario_id:
         query = query.filter(models.Reserva.usuario_id == usuario_id)
+    if espacio_id:
+        query = query.filter(models.Reserva.espacio_id == espacio_id)
+    if fecha:
+        query = query.filter(models.Reserva.fecha == fecha)
+    query = query.filter(models.Reserva.estado != "cancelada")
     return query.all()
 
 @app.post("/reservas", response_model=schemas.ReservaResponse, status_code=status.HTTP_201_CREATED)
@@ -201,3 +206,12 @@ def eliminar_espacio(espacio_id: UUID, db: Session = Depends(get_db)):
     db.delete(espacio)
     db.commit()
     return {"message": "Espacio eliminado"}
+@app.patch("/espacios/{espacio_id}")
+def actualizar_espacio(espacio_id: UUID, datos: schemas.EspacioUpdate, db: Session = Depends(get_db)):
+    espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == espacio_id).first()
+    if not espacio:
+        raise HTTPException(status_code=404, detail="Espacio no encontrado")
+    for campo, valor in datos.model_dump(exclude_unset=True).items():
+        setattr(espacio, campo, valor)
+    db.commit()
+    return {"message": "Espacio actualizado"}

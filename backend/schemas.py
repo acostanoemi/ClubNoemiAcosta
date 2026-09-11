@@ -59,7 +59,23 @@ class EspacioCreate(BaseModel):
     nombre: str  # Ej: Moron_Rivadavia_19850_Paddle_1
     deporte: str
     precio_por_hora: float
+    subcategoria: Optional[str] = None
+    ambiente: Optional[str] = None
+    iluminada: bool = False
+    hora_apertura: Optional[time] = None
+    hora_cierre: Optional[time] = None
     activo: bool = True
+
+class EspacioUpdate(BaseModel):
+    nombre: Optional[str] = None
+    deporte: Optional[str] = None
+    precio_por_hora: Optional[float] = None
+    subcategoria: Optional[str] = None
+    ambiente: Optional[str] = None
+    iluminada: Optional[bool] = None
+    hora_apertura: Optional[time] = None
+    hora_cierre: Optional[time] = None
+    activo: Optional[bool] = None
 
 class EspacioResponse(BaseModel):
     id: UUID
@@ -67,6 +83,11 @@ class EspacioResponse(BaseModel):
     nombre: str
     deporte: str
     precio_por_hora: float
+    subcategoria: Optional[str] = None
+    ambiente: Optional[str] = None
+    iluminada: bool = False
+    hora_apertura: Optional[time] = None
+    hora_cierre: Optional[time] = None
     activo: bool
 
     class Config:

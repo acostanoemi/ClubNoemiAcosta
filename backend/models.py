@@ -37,6 +37,11 @@ class EspacioDeportivo(Base):
     nombre = Column(String, nullable=False)  # Formato: Sede_Direccion_Deporte_Numero
     deporte = Column(String, nullable=False)
     precio_por_hora = Column(Float, nullable=False)
+    subcategoria = Column(String, nullable=True)  # Ej: Polvo de Ladrillo, Cemento, Indoor Parquet
+    ambiente = Column(String, nullable=True)  # Outdoor / Indoor
+    iluminada = Column(Boolean, default=False)
+    hora_apertura = Column(Time, nullable=True)
+    hora_cierre = Column(Time, nullable=True)
     activo = Column(Boolean, default=True)
 
     sede = relationship("Sede", back_populates="espacios")
