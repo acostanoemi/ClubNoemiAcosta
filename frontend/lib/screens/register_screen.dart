@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -279,7 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: _nombreController,
                     style: const TextStyle(color: Colors.white),
-                    decoration: buildInputDecoration('Juan', hasError: _fieldErrors.contains('nombre')),
+                    decoration: buildInputDecoration(context, 'Juan', hasError: _fieldErrors.contains('nombre')),
                   ),
                 ],
               ),
@@ -293,7 +293,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: _apellidoController,
                     style: const TextStyle(color: Colors.white),
-                    decoration: buildInputDecoration('Pérez', hasError: _fieldErrors.contains('apellido')),
+                    decoration: buildInputDecoration(context, 'Pérez', hasError: _fieldErrors.contains('apellido')),
                   ),
                 ],
               ),
@@ -307,7 +307,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           keyboardType: TextInputType.number,
           inputFormatters: [DniInputFormatter()],
           style: const TextStyle(color: Colors.white),
-          decoration: buildInputDecoration('31.234.567', hasError: _fieldErrors.contains('dni')),
+          decoration: buildInputDecoration(context, '31.234.567', hasError: _fieldErrors.contains('dni')),
         ),
         const SizedBox(height: 16),
         FieldLabel('FECHA DE NACIMIENTO *', hasError: _fieldErrors.contains('fecha')),
@@ -316,7 +316,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           readOnly: true,
           onTap: _pickBirthDate,
           style: const TextStyle(color: Colors.white),
-          decoration: buildInputDecoration('', hasError: _fieldErrors.contains('fecha')),
+          decoration: buildInputDecoration(context, '', hasError: _fieldErrors.contains('fecha')),
         ),
         const SizedBox(height: 16),
         FieldLabel('EMAIL *', hasError: _fieldErrors.contains('email')),
@@ -324,7 +324,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           style: const TextStyle(color: Colors.white),
-          decoration: buildInputDecoration('juan@email.com', hasError: _fieldErrors.contains('email')),
+          decoration: buildInputDecoration(context, 'juan@email.com', hasError: _fieldErrors.contains('email')),
         ),
         const SizedBox(height: 16),
         FieldLabel('CONTRASEÑA *', hasError: _fieldErrors.contains('password')),
@@ -332,7 +332,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           controller: _passwordController,
           obscureText: _obscurePassword,
           style: const TextStyle(color: Colors.white),
-          decoration: buildInputDecoration('Mínimo 8 caracteres', hasError: _fieldErrors.contains('password')).copyWith(
+          decoration: buildInputDecoration(context, 'Mínimo 8 caracteres', hasError: _fieldErrors.contains('password')).copyWith(
             suffixIcon: IconButton(
               icon: SvgPicture.asset('assets/icons/Icon.svg', width: 16, height: 16),
               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -366,3 +366,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
+

@@ -1,7 +1,8 @@
-
 import 'package:flutter/material.dart';
 import '../widgets/shared_widgets.dart';
 import '../session.dart';
+import '../theme/app_theme.dart';
+import '../theme/theme_scope.dart';
 import 'cambiar_contrasena_screen.dart';
 
 // TODO: reemplazar por datos reales del usuario logueado una vez que
@@ -14,7 +15,6 @@ class MiPerfilScreen extends StatefulWidget {
 }
 
 class _MiPerfilScreenState extends State<MiPerfilScreen> {
-  bool _modoOscuro = true;
   bool _mostrarBannerActualizada = false;
 
   // Mock — reemplazar por el usuario real.
@@ -35,10 +35,12 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final themeController = ThemeScope.of(context);
     final iniciales = '${_nombre[0]}${_apellido[0]}';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF050508),
+      backgroundColor: colors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
@@ -46,10 +48,10 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text.rich(
-                const TextSpan(
+                TextSpan(
                   children: [
-                    TextSpan(text: 'MI ', style: TextStyle(color: Colors.white)),
-                    TextSpan(text: 'PERFIL', style: TextStyle(color: kAccentColor)),
+                    TextSpan(text: 'MI ', style: TextStyle(color: colors.textPrimary)),
+                    TextSpan(text: 'PERFIL', style: TextStyle(color: colors.accent)),
                   ],
                 ),
                 style: const TextStyle(
@@ -65,7 +67,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: kAccentColor,
+                      color: colors.accent,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     alignment: Alignment.center,
@@ -86,16 +88,16 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                       children: [
                         Text(
                           '$_nombre $_apellido',
-                          style: const TextStyle(color: Colors.white, fontSize: 19, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800),
+                          style: TextStyle(color: colors.textPrimary, fontSize: 19, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800),
                         ),
                         Text(
                           _email,
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 13, fontFamily: 'Inter'),
+                          style: TextStyle(color: colors.textSecondary, fontSize: 13, fontFamily: 'Inter'),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'MIEMBRO ACTIVO',
-                          style: TextStyle(color: kAccentColor, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1.2),
+                          style: TextStyle(color: colors.accent, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1.2),
                         ),
                       ],
                     ),
@@ -108,7 +110,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: kAccentColor,
+                    color: colors.accent,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Row(
@@ -124,24 +126,24 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                  border: Border.all(color: colors.surfaceBorder),
                 ),
                 child: SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  activeThumbColor: kAccentColor,
-                  title: const Text('Modo oscuro', style: TextStyle(color: Colors.white, fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 14)),
-                  secondary: const Icon(Icons.dark_mode_outlined, color: Colors.white70),
-                  value: _modoOscuro,
-                  onChanged: (v) => setState(() => _modoOscuro = v),
+                  activeThumbColor: colors.accent,
+                  title: Text('Modo oscuro', style: TextStyle(color: colors.textPrimary, fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 14)),
+                  secondary: Icon(Icons.dark_mode_outlined, color: colors.textSecondary),
+                  value: themeController.isDark,
+                  onChanged: (v) => themeController.setDark(v),
                 ),
               ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -150,13 +152,13 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('DATOS PERSONALES', style: TextStyle(color: Colors.white.withValues(alpha: 0.40), fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                        Text('DATOS PERSONALES', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
                         TextButton.icon(
                           onPressed: () {
                             // TODO: habilitar edición cuando exista el endpoint de update de perfil.
                           },
-                          icon: const Icon(Icons.edit_outlined, size: 16, color: kAccentColor),
-                          label: const Text('Editar', style: TextStyle(color: kAccentColor, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                          icon: Icon(Icons.edit_outlined, size: 16, color: colors.accent),
+                          label: Text('Editar', style: TextStyle(color: colors.accent, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
                           style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
                         ),
                       ],
@@ -164,39 +166,44 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _campoSoloLectura('NOMBRE', _nombre)),
+                        Expanded(child: _campoSoloLectura(colors, 'NOMBRE', _nombre)),
                         const SizedBox(width: 12),
-                        Expanded(child: _campoSoloLectura('APELLIDO', _apellido)),
+                        Expanded(child: _campoSoloLectura(colors, 'APELLIDO', _apellido)),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _campoSoloLectura('DNI', _dni),
+                    _campoSoloLectura(colors, 'DNI', _dni),
                     const SizedBox(height: 12),
-                    _campoSoloLectura('FECHA DE NACIMIENTO', _fechaNacimiento),
+                    _campoSoloLectura(colors, 'FECHA DE NACIMIENTO', _fechaNacimiento),
                     const SizedBox(height: 12),
-                    _campoSoloLectura('EMAIL (solo lectura)', _email, candado: true),
+                    _campoSoloLectura(colors, 'EMAIL (solo lectura)', _email, candado: true),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
+                            const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(16),
                 ),
+                clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('Seguridad', style: TextStyle(color: Colors.white.withValues(alpha: 0.40), fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                        child: Text('Seguridad', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
                       ),
                     ),
-                    ListTile(
-                      onTap: _irACambiarContrasena,
-                      title: const Text('Cambiar contraseña', style: TextStyle(color: Colors.white, fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 14)),
-                      trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+                    Material(
+                      color: Colors.transparent,
+                      child: ListTile(
+                        onTap: _irACambiarContrasena,
+                        title: Text('Cambiar contraseña', style: TextStyle(color: colors.textPrimary, fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 14)),
+                        trailing: Icon(Icons.chevron_right, color: colors.textSecondary),
+                      ),
                     ),
                   ],
                 ),
@@ -205,7 +212,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextButton.icon(
@@ -213,8 +220,8 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                     // TODO: limpiar sesión real (token) cuando exista.
                     Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
                   },
-                  icon: const Icon(Icons.logout, color: Colors.white70, size: 18),
-                  label: const Text('Cerrar sesión', style: TextStyle(color: Colors.white70, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+                  icon: Icon(Icons.logout, color: colors.textSecondary, size: 18),
+                  label: Text('Cerrar sesión', style: TextStyle(color: colors.textSecondary, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -264,40 +271,40 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF0A0A0E),
-          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+          color: colors.bottomSheetBackground,
+          border: Border(top: BorderSide(color: colors.surfaceBorder)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _navItem(Icons.home_outlined, 'INICIO', false),
-            _navItem(Icons.apartment_outlined, 'SEDES', false),
-            _navItem(Icons.calendar_today_outlined, 'RESERVAS', false),
-            _navItem(Icons.person, 'PERFIL', true),
+            _navItem(colors, Icons.home_outlined, 'INICIO', false, () => Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false)),
+            _navItem(colors, Icons.apartment_outlined, 'SEDES', false, () => Navigator.pushNamedAndRemoveUntil(context, '/sedes', (r) => false)),
+            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () {}),
+            _navItem(colors, Icons.person, 'PERFIL', true, () {}),
           ],
         ),
       ),
     );
   }
 
-  Widget _campoSoloLectura(String label, String value, {bool candado = false}) {
+  Widget _campoSoloLectura(AppColors colors, String label, String value, {bool candado = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1)),
+        Text(label, style: TextStyle(color: colors.textMuted, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1)),
         const SizedBox(height: 4),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: colors.surface,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: colors.surfaceBorder),
           ),
           child: Row(
             children: [
-              Expanded(child: Text(value, style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 14, fontFamily: 'Inter'))),
-              if (candado) Icon(Icons.lock_outline, size: 14, color: Colors.white.withValues(alpha: 0.30)),
+              Expanded(child: Text(value, style: TextStyle(color: colors.textSecondary, fontSize: 14, fontFamily: 'Inter'))),
+              if (candado) Icon(Icons.lock_outline, size: 14, color: colors.textMuted),
             ],
           ),
         ),
@@ -305,15 +312,18 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     );
   }
 
-  Widget _navItem(IconData icon, String label, bool active) {
-    final color = active ? kAccentColor : Colors.white38;
-    return Column(
+ Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
+  final color = active ? colors.accent : colors.textMuted;
+  return GestureDetector(
+    onTap: onTap,
+    child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, color: color, size: 22),
         const SizedBox(height: 2),
         Text(label, style: TextStyle(color: color, fontSize: 9, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
       ],
-    );
-  }
+    ),
+  );
+}
 }

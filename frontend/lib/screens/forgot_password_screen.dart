@@ -164,7 +164,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   style: const TextStyle(color: Colors.white),
-                  decoration: buildInputDecoration('juan@email.com', hasError: _fieldErrors.contains('email')),
+                  decoration: buildInputDecoration(context, 'juan@email.com', hasError: _fieldErrors.contains('email')),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(

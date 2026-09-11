@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,7 +9,9 @@ import 'session.dart';
 import 'screens/mi_perfil_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/sedes_screen.dart';
-
+import 'theme/app_theme.dart';
+import 'theme/theme_controller.dart';
+import 'theme/theme_scope.dart';
 
 void main() {
   runApp(const ClubApp());
@@ -19,62 +21,77 @@ void main() {
 // Para el emulador de Android hay que cambiar esto a "http://10.0.2.2:8000".
 const String apiBaseUrl = "http://localhost:8000";
 
-class ClubApp extends StatelessWidget {
+class ClubApp extends StatefulWidget {
   const ClubApp({super.key});
 
   @override
+  State<ClubApp> createState() => _ClubAppState();
+}
+
+class _ClubAppState extends State<ClubApp> {
+  final _themeController = ThemeController();
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF050508),
-      ),
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
-        '/forgot': (context) => const ForgotPasswordScreen(),
-        '/perfil': (context) => const MiPerfilScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/sedes': (context) => const SedesScreen(),
-      },
-      builder: (context, child) {
-        // Lienzo "teléfono" fijo de 412x892 (el mismo tamaño de diseño del
-        // Figma), pero escalado para entrar siempre completo en la ventana
-        // del navegador, sea cual sea su alto. Antes se recortaba si la
-        // ventana medía menos de 892px de alto; ahora se achica en vez de
-        // cortarse.
-        const designWidth = 412.0;
-        const designHeight = 892.0;
+    return ThemeScope(
+      controller: _themeController,
+      child: AnimatedBuilder(
+        animation: _themeController,
+        builder: (context, _) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            themeMode: _themeController.mode,
+            theme: buildLightTheme(),
+            darkTheme: buildDarkTheme(),
+            initialRoute: '/login',
+            routes: {
+              '/login': (context) => const LoginScreen(),
+              '/register': (context) => const RegisterScreen(),
+              '/forgot': (context) => const ForgotPasswordScreen(),
+              '/perfil': (context) => const MiPerfilScreen(),
+              '/home': (context) => const HomeScreen(),
+              '/sedes': (context) => const SedesScreen(),
+            },
+            builder: (context, child) {
+              // Lienzo "teléfono" fijo de 412x892 (el mismo tamaño de diseño del
+              // Figma), pero escalado para entrar siempre completo en la ventana
+              // del navegador, sea cual sea su alto. Antes se recortaba si la
+              // ventana medía menos de 892px de alto; ahora se achica en vez de
+              // cortarse.
+              const designWidth = 412.0;
+              const designHeight = 892.0;
 
-        return Container(
-          color: const Color(0xFF000000),
-          child: Center(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final scale = (constraints.maxWidth / designWidth) <
-                        (constraints.maxHeight / designHeight)
-                    ? constraints.maxWidth / designWidth
-                    : constraints.maxHeight / designHeight;
+              return Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Center(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final scale = (constraints.maxWidth / designWidth) <
+                              (constraints.maxHeight / designHeight)
+                          ? constraints.maxWidth / designWidth
+                          : constraints.maxHeight / designHeight;
 
-                return Transform.scale(
-                  scale: scale,
-                  child: SizedBox(
-                    width: designWidth,
-                    height: designHeight,
-                    child: MediaQuery(
-                      data: MediaQuery.of(context).copyWith(
-                        size: const Size(designWidth, designHeight),
-                      ),
-                      child: child!,
-                    ),
+                      return Transform.scale(
+                        scale: scale,
+                        child: SizedBox(
+                          width: designWidth,
+                          height: designHeight,
+                          child: MediaQuery(
+                            data: MediaQuery.of(context).copyWith(
+                              size: const Size(designWidth, designHeight),
+                            ),
+                            child: child!,
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          ),
-        );
-      },
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -120,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-            if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         Session.set(
           id: data['id'],
@@ -147,8 +164,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-    @override
+  @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final nombre = Session.nombre ?? '';
     final apellido = Session.apellido ?? '';
     final iniciales = (nombre.isNotEmpty && apellido.isNotEmpty) ? '${nombre[0]}${apellido[0]}' : '?';
@@ -165,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'BIENVENIDO A',
                     style: TextStyle(
-                      color: kAccentColor,
+                      color: colors.accent,
                       fontSize: 10,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w900,
@@ -174,10 +192,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text.rich(
-                    const TextSpan(
+                    TextSpan(
                       children: [
-                        TextSpan(text: 'CLUB ', style: TextStyle(color: Colors.white)),
-                        TextSpan(text: 'NOEMI ACOSTA', style: TextStyle(color: kAccentColor)),
+                        TextSpan(text: 'CLUB ', style: TextStyle(color: colors.textPrimary)),
+                        TextSpan(text: 'NOEMI ACOSTA', style: TextStyle(color: colors.accent)),
                       ],
                     ),
                     style: const TextStyle(
@@ -191,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Gestión de espacios deportivos',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.38),
+                      color: colors.textMuted,
                       fontSize: 13,
                       fontFamily: 'Inter',
                     ),
@@ -199,22 +217,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 36),
                   TextField(
                     controller: _emailController,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: colors.textPrimary),
                     keyboardType: TextInputType.emailAddress,
-                    decoration: buildInputDecoration('Email'),
+                    decoration: buildInputDecoration(context, 'Email'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: buildInputDecoration('Contraseña').copyWith(
+                    style: TextStyle(color: colors.textPrimary),
+                    decoration: buildInputDecoration(context, 'Contraseña').copyWith(
                       suffixIcon: IconButton(
                         icon: SvgPicture.asset(
-                            'assets/icons/Icon.svg',
-                            width: 16,
-                            height: 16,
-                          ),
+                          'assets/icons/Icon.svg',
+                          width: 16,
+                          height: 16,
+                        ),
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
                         onPressed: () {
@@ -238,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         '¿Olvidaste tu contraseña?',
                         style: TextStyle(
-                          color: kAccentColor,
+                          color: colors.accent,
                           fontSize: 12,
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w800,
@@ -252,7 +270,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: ElevatedButton(
                       onPressed: _loading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: kAccentColor,
+                        backgroundColor: colors.accent,
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
@@ -277,12 +295,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
                   Row(
                     children: [
-                      Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10))),
+                      Expanded(child: Divider(color: colors.surfaceBorder)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text('o', style: TextStyle(color: Colors.white.withValues(alpha: 0.20), fontSize: 12, fontFamily: 'Inter')),
+                        child: Text('o', style: TextStyle(color: colors.textMuted, fontSize: 12, fontFamily: 'Inter')),
                       ),
-                      Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10))),
+                      Expanded(child: Divider(color: colors.surfaceBorder)),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -291,7 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text(
                         '¿No tenés cuenta? ',
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.34), fontSize: 13, fontFamily: 'Inter'),
+                        style: TextStyle(color: colors.textSecondary, fontSize: 13, fontFamily: 'Inter'),
                       ),
                       GestureDetector(
                         onTap: () {
@@ -300,7 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Text(
                           'COMENZAR →',
                           style: TextStyle(
-                            color: kAccentColor,
+                            color: colors.accent,
                             fontSize: 13,
                             fontFamily: 'Barlow Condensed',
                             fontWeight: FontWeight.w900,

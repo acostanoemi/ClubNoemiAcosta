@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../theme/app_theme.dart';
 
+/// Alias de compatibilidad para pantallas que todavía no migraron a
+/// context.colors.accent — mismo valor en claro y oscuro, se puede
+/// borrar cuando ya no quede ninguna referencia.
 const Color kAccentColor = Color(0xFFD4FF00);
 
-/// Fondo compartido: foto de fondo + gradiente oscuro, usado en Login y Register.
+/// Fondo compartido: foto de fondo + gradiente, usado en Login y Register.
 class AppBackground extends StatelessWidget {
   final Widget child;
 
@@ -11,6 +15,7 @@ class AppBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Stack(
       children: [
         Positioned.fill(
@@ -26,9 +31,9 @@ class AppBackground extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.88),
-                  Colors.black.withValues(alpha: 0.88),
-                  Colors.black.withValues(alpha: 0.84),
+                  colors.overlayScrim,
+                  colors.overlayScrim,
+                  colors.overlayScrim.withValues(alpha: colors.overlayScrim.a * 0.95),
                 ],
               ),
             ),
@@ -46,24 +51,25 @@ class AppBackground extends StatelessWidget {
 
 /// Decoración compartida para TextFields. `hasError` pinta el borde rojo
 /// (usado en validación de campos vacíos y en el caso "usuario ya registrado").
-InputDecoration buildInputDecoration(String label, {bool hasError = false}) {
+InputDecoration buildInputDecoration(BuildContext context, String label, {bool hasError = false}) {
+  final colors = context.colors;
   final errorColor = Colors.red[400]!;
   return InputDecoration(
     hintText: label,
-    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.30), fontSize: 14, fontFamily: 'Inter'),
+    hintStyle: TextStyle(color: colors.textMuted, fontSize: 14, fontFamily: 'Inter'),
     filled: true,
-    fillColor: Colors.white.withValues(alpha: 0.08),
+    fillColor: colors.surface,
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: BorderSide(
-        color: hasError ? errorColor : Colors.white.withValues(alpha: 0.14),
+        color: hasError ? errorColor : colors.surfaceBorder,
         width: hasError ? 1.3 : 1.13,
       ),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: hasError ? errorColor : kAccentColor, width: 1.5),
+      borderSide: BorderSide(color: hasError ? errorColor : colors.accent, width: 1.5),
     ),
   );
 }
@@ -82,7 +88,7 @@ class FieldLabel extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          color: hasError ? Colors.red[300] : Colors.white.withValues(alpha: 0.45),
+          color: hasError ? Colors.red[300] : context.colors.textSecondary,
           fontSize: 11,
           fontFamily: 'Inter',
           fontWeight: FontWeight.w600,
@@ -94,6 +100,7 @@ class FieldLabel extends StatelessWidget {
 }
 
 /// Banner rojo de error, tipo "Completá todos los campos" / "Este usuario ya esta registrado".
+/// El rojo queda fijo en ambos modos — no depende del tema.
 class ErrorBanner extends StatelessWidget {
   final String message;
 

@@ -5,6 +5,7 @@ import '../widgets/shared_widgets.dart';
 import '../models/sede.dart';
 import '../models/espacio.dart';
 import '../session.dart';
+import 'sede_detalle_screen.dart';
 
 const String _apiBaseUrl = "http://localhost:8000";
 
@@ -202,7 +203,9 @@ class _SedesScreenState extends State<SedesScreen> {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      // TODO: navegar al detalle de la sede cuando exista esa pantalla.
+                                      Navigator.of(context).push(MaterialPageRoute(
+                                        builder: (_) => SedeDetalleScreen(sede: s),
+                                      ));
                                     },
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,

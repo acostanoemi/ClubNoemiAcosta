@@ -139,7 +139,7 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                 controller: _actualController,
                 obscureText: _obscureActual,
                 style: const TextStyle(color: Colors.white),
-                decoration: buildInputDecoration('', hasError: _errorActual != null).copyWith(
+                decoration: buildInputDecoration(context, '', hasError: _errorActual != null).copyWith(
                   suffixIcon: IconButton(
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
@@ -162,7 +162,7 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                 controller: _nuevaController,
                 obscureText: _obscureNueva,
                 style: const TextStyle(color: Colors.white),
-                decoration: buildInputDecoration('').copyWith(
+                decoration: buildInputDecoration(context, '').copyWith(
                   suffixIcon: IconButton(
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
@@ -204,7 +204,7 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                 controller: _repetirController,
                 obscureText: _obscureRepetir,
                 style: const TextStyle(color: Colors.white),
-                decoration: buildInputDecoration('', hasError: _repetirController.text.isNotEmpty && !_coinciden).copyWith(
+                decoration: buildInputDecoration(context, '', hasError: _repetirController.text.isNotEmpty && !_coinciden).copyWith(
                   suffixIcon: IconButton(
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
