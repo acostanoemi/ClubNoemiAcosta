@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/shared_widgets.dart';
+import '../theme/app_theme.dart';
 import '../models/sede.dart';
 import '../models/espacio.dart';
 import '../session.dart';
@@ -90,17 +91,19 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: colors.textPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(_confirmada ? '¡Reserva confirmada!' : 'Confirmá tu reserva', style: const TextStyle(color: Colors.black, fontSize: 17, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+        title: Text(_confirmada ? '¡Reserva confirmada!' : 'Confirmá tu reserva', style: TextStyle(color: colors.textPrimary, fontSize: 17, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
       ),
       body: SafeArea(
         child: Padding(
@@ -108,12 +111,14 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _stepper(),
+              _stepper(colors),
               const SizedBox(height: 20),
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Column(
                   children: [
+                    // Card "hero" con gradiente oscuro fijo a propósito — mismo look
+                    // en ambos temas, no depende de context.colors.
                     Container(
                       height: 90,
                       width: double.infinity,
@@ -127,21 +132,16 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
                         style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900),
                       ),
                     ),
-                    _filaResumen('Cancha', (widget.espacio.subcategoria ?? widget.espacio.deporte).toUpperCase()),
-                    _filaResumen('Fecha', '${_diasCompletos[widget.fecha.weekday - 1]} ${widget.fecha.day} DE ${_mesesCompletos[widget.fecha.month - 1]}'),
-                    _filaResumen('Horario', '${widget.horaInicio.toString().padLeft(2, '0')}:00-${_horaFin.toString().padLeft(2, '0')}:00HS'),
-                    _filaResumen('Total', '\$${widget.total.round()}', valorVerde: true, ultima: true),
+                    _filaResumen('Cancha', (widget.espacio.subcategoria ?? widget.espacio.deporte).toUpperCase(), colors),
+                    _filaResumen('Fecha', '${_diasCompletos[widget.fecha.weekday - 1]} ${widget.fecha.day} DE ${_mesesCompletos[widget.fecha.month - 1]}', colors),
+                    _filaResumen('Horario', '${widget.horaInicio.toString().padLeft(2, '0')}:00-${_horaFin.toString().padLeft(2, '0')}:00HS', colors),
+                    _filaResumen('Total', '\$${widget.total.round()}', colors, valorVerde: true, ultima: true),
                   ],
                 ),
               ),
               if (_error != null) ...[
                 const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.red[200]!)),
-                  child: Text(_error!, style: TextStyle(color: Colors.red[700], fontFamily: 'Inter', fontSize: 13)),
-                ),
+                ErrorBanner(message: _error!),
               ],
               if (_confirmada) ...[
                 const Spacer(),
@@ -151,13 +151,13 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
                       Container(
                         width: 72,
                         height: 72,
-                        decoration: const BoxDecoration(color: kAccentColor, shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: colors.accent, shape: BoxShape.circle),
                         child: const Icon(Icons.check, color: Colors.black, size: 36),
                       ),
                       const SizedBox(height: 16),
-                      const Text('¡Listo!', style: TextStyle(fontSize: 22, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
+                      Text('¡Listo!', style: TextStyle(color: colors.textPrimary, fontSize: 22, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
                       const SizedBox(height: 4),
-                      Text('Te esperamos en Sede ${widget.sede.nombre}', style: TextStyle(color: Colors.black54, fontFamily: 'Inter', fontSize: 13)),
+                      Text('Te esperamos en Sede ${widget.sede.nombre}', style: TextStyle(color: colors.textSecondary, fontFamily: 'Inter', fontSize: 13)),
                     ],
                   ),
                 ),
@@ -167,7 +167,7 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
                   height: 52,
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(backgroundColor: kAccentColor, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                    style: ElevatedButton.styleFrom(backgroundColor: colors.accent, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                     child: const Text('VOLVER', style: TextStyle(color: Colors.black, fontSize: 15, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
                   ),
                 ),
@@ -178,7 +178,7 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
                   height: 52,
                   child: ElevatedButton(
                     onPressed: _loading ? null : _confirmarReserva,
-                    style: ElevatedButton.styleFrom(backgroundColor: kAccentColor, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                    style: ElevatedButton.styleFrom(backgroundColor: colors.accent, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                     child: _loading
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                         : const Text('CONFIRMAR RESERVA', style: TextStyle(color: Colors.black, fontSize: 15, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, letterSpacing: 1)),
@@ -202,43 +202,43 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
     );
   }
 
-  Widget _stepper() {
+  Widget _stepper(AppColors colors) {
     final paso = _confirmada ? 3 : 2;
     return Row(
       children: [
-        _circuloPaso(1, paso >= 1, texto: paso > 1 ? null : '1'),
-        Expanded(child: Container(height: 2, color: paso >= 2 ? kAccentColor : Colors.black12)),
-        _circuloPaso(2, paso >= 2, texto: paso > 2 ? null : '2'),
-        Expanded(child: Container(height: 2, color: paso >= 3 ? kAccentColor : Colors.black12)),
-        _circuloPaso(3, paso >= 3, texto: '3'),
+        _circuloPaso(1, paso >= 1, colors, texto: paso > 1 ? null : '1'),
+        Expanded(child: Container(height: 2, color: paso >= 2 ? colors.accent : colors.surfaceBorder)),
+        _circuloPaso(2, paso >= 2, colors, texto: paso > 2 ? null : '2'),
+        Expanded(child: Container(height: 2, color: paso >= 3 ? colors.accent : colors.surfaceBorder)),
+        _circuloPaso(3, paso >= 3, colors, texto: '3'),
       ],
     );
   }
 
-  Widget _circuloPaso(int n, bool activo, {String? texto}) {
+  Widget _circuloPaso(int n, bool activo, AppColors colors, {String? texto}) {
     return Container(
       width: 26,
       height: 26,
-      decoration: BoxDecoration(color: activo ? kAccentColor : Colors.black12, shape: BoxShape.circle),
+      decoration: BoxDecoration(color: activo ? colors.accent : colors.surface, shape: BoxShape.circle),
       alignment: Alignment.center,
       child: texto == null
           ? const Icon(Icons.check, size: 14, color: Colors.black)
-          : Text(texto, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: activo ? Colors.black : Colors.black45)),
+          : Text(texto, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: activo ? Colors.black : colors.textSecondary)),
     );
   }
 
-  Widget _filaResumen(String label, String valor, {bool valorVerde = false, bool ultima = false}) {
+  Widget _filaResumen(String label, String valor, AppColors colors, {bool valorVerde = false, bool ultima = false}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        border: Border(bottom: ultima ? BorderSide.none : BorderSide(color: Colors.grey[300]!)),
+        color: colors.surface,
+        border: Border(bottom: ultima ? BorderSide.none : BorderSide(color: colors.surfaceBorder)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.black.withValues(alpha: 0.45), fontSize: 14, fontFamily: 'Inter')),
-          Text(valor, style: TextStyle(color: valorVerde ? kAccentColor.withValues(alpha: 1) : Colors.black, fontSize: 14, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
+          Text(label, style: TextStyle(color: colors.textSecondary, fontSize: 14, fontFamily: 'Inter')),
+          Text(valor, style: TextStyle(color: valorVerde ? colors.accent : colors.textPrimary, fontSize: 14, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
         ],
       ),
     );

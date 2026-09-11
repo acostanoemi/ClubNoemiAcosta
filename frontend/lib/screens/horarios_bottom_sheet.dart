@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/shared_widgets.dart';
+import '../theme/app_theme.dart';
 import '../models/sede.dart';
 import '../models/espacio.dart';
 import '../models/reserva.dart';
@@ -103,6 +104,8 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.5,
@@ -110,15 +113,15 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: colors.bottomSheetBackground,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 10),
-                child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(2))),
+                child: Container(width: 40, height: 4, decoration: BoxDecoration(color: colors.surfaceBorder, borderRadius: BorderRadius.circular(2))),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -127,7 +130,7 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('FECHA', style: TextStyle(color: Colors.black45, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                      Text('FECHA', style: TextStyle(color: colors.textSecondary, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
                       const SizedBox(height: 10),
                       SizedBox(
                         height: 66,
@@ -146,16 +149,16 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                               child: Container(
                                 width: 56,
                                 decoration: BoxDecoration(
-                                  color: activo ? kAccentColor : Colors.grey[100],
+                                  color: activo ? colors.accent : colors.surface,
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 alignment: Alignment.center,
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(_diasSemanaCortos[d.weekday - 1], style: const TextStyle(color: Colors.black54, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                                    Text(_diasSemanaCortos[d.weekday - 1], style: TextStyle(color: activo ? Colors.black54 : colors.textSecondary, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
                                     const SizedBox(height: 2),
-                                    Text('${d.day}', style: const TextStyle(color: Colors.black, fontSize: 18, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
+                                    Text('${d.day}', style: TextStyle(color: activo ? Colors.black : colors.textPrimary, fontSize: 18, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
                                   ],
                                 ),
                               ),
@@ -164,27 +167,27 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const Text('DURACIÓN', style: TextStyle(color: Colors.black45, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                      Text('DURACIÓN', style: TextStyle(color: colors.textSecondary, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          Expanded(child: _botonDuracion(1, '1 hora')),
+                          Expanded(child: _botonDuracion(1, '1 hora', colors)),
                           const SizedBox(width: 10),
-                          Expanded(child: _botonDuracion(2, '2 horas')),
+                          Expanded(child: _botonDuracion(2, '2 horas', colors)),
                         ],
                       ),
                       const SizedBox(height: 20),
-                      const Text('HORARIO DISPONIBLE', style: TextStyle(color: Colors.black45, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                      Text('HORARIO DISPONIBLE', style: TextStyle(color: colors.textSecondary, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
                       const SizedBox(height: 10),
                       if (_cargandoReservas)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 30),
-                          child: Center(child: CircularProgressIndicator(color: kAccentColor)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 30),
+                          child: Center(child: CircularProgressIndicator(color: colors.accent)),
                         )
                       else if (_horariosDisponibles.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Text('No quedan horarios libres este día.', style: TextStyle(color: Colors.black54, fontFamily: 'Inter')),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: Text('No quedan horarios libres este día.', style: TextStyle(color: colors.textSecondary, fontFamily: 'Inter')),
                         )
                       else
                         Wrap(
@@ -199,11 +202,11 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                                 width: (MediaQuery.of(context).size.width - 20 * 2 - 10) / 2,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 decoration: BoxDecoration(
-                                  color: activo ? kAccentColor : Colors.grey[100],
+                                  color: activo ? colors.accent : colors.surface,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 alignment: Alignment.center,
-                                child: Text(texto, style: TextStyle(color: Colors.black, fontSize: 13, fontFamily: 'Inter', fontWeight: activo ? FontWeight.w800 : FontWeight.w600)),
+                                child: Text(texto, style: TextStyle(color: activo ? Colors.black : colors.textPrimary, fontSize: 13, fontFamily: 'Inter', fontWeight: activo ? FontWeight.w800 : FontWeight.w600)),
                               ),
                             );
                           }).toList(),
@@ -212,9 +215,9 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                         const SizedBox(height: 10),
                         Row(
                           children: [
-                            Icon(Icons.info_outline, size: 14, color: Colors.black38),
+                            Icon(Icons.info_outline, size: 14, color: colors.textMuted),
                             const SizedBox(width: 6),
-                            Text('Algunos horarios están ocupados · $_noDisponibles no disponibles', style: const TextStyle(color: Colors.black45, fontSize: 12, fontFamily: 'Inter')),
+                            Text('Algunos horarios están ocupados · $_noDisponibles no disponibles', style: TextStyle(color: colors.textSecondary, fontSize: 12, fontFamily: 'Inter')),
                           ],
                         ),
                       ],
@@ -222,20 +225,20 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(14)),
+                        decoration: BoxDecoration(color: colors.surface, borderRadius: BorderRadius.circular(14)),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(widget.espacio.subcategoria ?? widget.espacio.deporte, style: const TextStyle(color: Colors.black, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
-                                Text('\$ ${widget.espacio.precioPorHora.round()} × $_duracionHoras', style: const TextStyle(color: Colors.black87, fontSize: 13, fontFamily: 'Inter')),
+                                Text(widget.espacio.subcategoria ?? widget.espacio.deporte, style: TextStyle(color: colors.textPrimary, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
+                                Text('\$ ${widget.espacio.precioPorHora.round()} × $_duracionHoras', style: TextStyle(color: colors.textPrimary, fontSize: 13, fontFamily: 'Inter')),
                               ],
                             ),
-                            Text('${widget.espacio.deporte} · ${_duracionHoras}h', style: TextStyle(color: Colors.black.withValues(alpha: 0.45), fontSize: 12, fontFamily: 'Inter')),
+                            Text('${widget.espacio.deporte} · ${_duracionHoras}h', style: TextStyle(color: colors.textSecondary, fontSize: 12, fontFamily: 'Inter')),
                             const SizedBox(height: 10),
-                            const Divider(height: 1),
+                            Divider(height: 1, color: colors.surfaceBorder),
                             const SizedBox(height: 10),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -244,16 +247,16 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Total', style: TextStyle(color: Colors.black.withValues(alpha: 0.45), fontSize: 13, fontFamily: 'Inter')),
-                                    Text('\$ ${_total.round()}', style: const TextStyle(color: Colors.black, fontSize: 28, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
+                                    Text('Total', style: TextStyle(color: colors.textSecondary, fontSize: 13, fontFamily: 'Inter')),
+                                    Text('\$ ${_total.round()}', style: TextStyle(color: colors.textPrimary, fontSize: 28, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
                                   ],
                                 ),
                                 if (_horaSeleccionada != null)
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text('${_horaSeleccionada!.toString().padLeft(2, '0')}:00 – ${(_horaSeleccionada! + _duracionHoras).toString().padLeft(2, '0')}:00', style: const TextStyle(color: kAccentColor, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
-                                      Text(_formatearFechaCorta(_fechaSeleccionada), style: TextStyle(color: Colors.black.withValues(alpha: 0.40), fontSize: 12, fontFamily: 'Inter')),
+                                      Text('${_horaSeleccionada!.toString().padLeft(2, '0')}:00 – ${(_horaSeleccionada! + _duracionHoras).toString().padLeft(2, '0')}:00', style: TextStyle(color: colors.accent, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
+                                      Text(_formatearFechaCorta(_fechaSeleccionada), style: TextStyle(color: colors.textMuted, fontSize: 12, fontFamily: 'Inter')),
                                     ],
                                   ),
                               ],
@@ -268,14 +271,14 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                         child: ElevatedButton(
                           onPressed: _horaSeleccionada != null ? _confirmar : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: kAccentColor,
-                            disabledBackgroundColor: Colors.grey[300],
+                            backgroundColor: colors.accent,
+                            disabledBackgroundColor: colors.surface,
                             elevation: 0,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                           child: Text(
                             _horaSeleccionada != null ? 'CONFIRMAR RESERVA' : 'SELECCIONÁ UN HORARIO',
-                            style: TextStyle(color: _horaSeleccionada != null ? Colors.black : Colors.black38, fontSize: 15, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, letterSpacing: 1),
+                            style: TextStyle(color: _horaSeleccionada != null ? Colors.black : colors.textMuted, fontSize: 15, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, letterSpacing: 1),
                           ),
                         ),
                       ),
@@ -290,7 +293,7 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
     );
   }
 
-  Widget _botonDuracion(int horas, String texto) {
+  Widget _botonDuracion(int horas, String texto, AppColors colors) {
     final activo = horas == _duracionHoras;
     return GestureDetector(
       onTap: () {
@@ -300,11 +303,11 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: activo ? kAccentColor : Colors.grey[100],
+          color: activo ? colors.accent : colors.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         alignment: Alignment.center,
-        child: Text(texto, style: TextStyle(color: Colors.black, fontSize: 14, fontFamily: 'Inter', fontWeight: activo ? FontWeight.w800 : FontWeight.w600)),
+        child: Text(texto, style: TextStyle(color: activo ? Colors.black : colors.textPrimary, fontSize: 14, fontFamily: 'Inter', fontWeight: activo ? FontWeight.w800 : FontWeight.w600)),
       ),
     );
   }
