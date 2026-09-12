@@ -218,50 +218,59 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-                        child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(_saludoSegunHora(), style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 2)),
-                                const SizedBox(height: 2),
-                                Text(nombre.isEmpty ? '' : '$nombre $apellido', style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
-                              ],
+                      // Saludo + notificaciones + avatar, ancladas arriba del
+                      // hero (antes estaban agrupadas con el título abajo del
+                      // todo, quedaban apretadas).
+                      Positioned(
+                        top: 20,
+                        left: 24,
+                        right: 24,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(_saludoSegunHora(), style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 2)),
+                                  const SizedBox(height: 2),
+                                  Text(nombre.isEmpty ? '' : '$nombre $apellido', style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                                ],
+                              ),
                             ),
-                          ),
-                          GestureDetector(
-                            onTap: () => setState(() => _mostrarNotificaciones = true),
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              margin: const EdgeInsets.only(right: 10),
-                              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white24)),
-                              child: const Icon(Icons.notifications_none, color: Colors.white70, size: 20),
+                            GestureDetector(
+                              onTap: () => setState(() => _mostrarNotificaciones = true),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                margin: const EdgeInsets.only(right: 10),
+                                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white24)),
+                                child: const Icon(Icons.notifications_none, color: Colors.white70, size: 20),
+                              ),
                             ),
-                          ),
-                          GestureDetector(
-                            onTap: () => setState(() => _mostrarPerfilMenu = true),
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(color: kAccentColor, shape: BoxShape.circle),
-                              alignment: Alignment.center,
-                              child: Text(iniciales, style: const TextStyle(color: Colors.black, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, fontSize: 14)),
+                            GestureDetector(
+                              onTap: () => setState(() => _mostrarPerfilMenu = true),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(color: kAccentColor, shape: BoxShape.circle),
+                                alignment: Alignment.center,
+                                child: Text(iniciales, style: const TextStyle(color: Colors.black, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, fontSize: 14)),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      const Text('CLUB NOEMI ACOSTA', style: TextStyle(color: kAccentColor, fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 3)),
-                      const SizedBox(height: 4),
+                      // Título, anclado abajo del hero -- mismo criterio que Sedes.
+                      Positioned(
+                        left: 24,
+                        right: 24,
+                        bottom: 20,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('CLUB NOEMI ACOSTA', style: TextStyle(color: kAccentColor, fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 3)),
+                            const SizedBox(height: 4),
                             const Text('ZONA DEPORTIVA', style: TextStyle(color: Colors.white, fontSize: 34, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
                           ],
                         ),
