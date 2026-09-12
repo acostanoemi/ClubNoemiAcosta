@@ -186,12 +186,32 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
       icon: Icons.warning_amber_rounded,
     );
 
-    // TODO: llamar al endpoint de eliminación de cuenta cuando exista en el
-    // backend. Por ahora solo se muestra la confirmación, sin efecto real.
+    // Llama al endpoint real de baja lógica (marca activo=False en el
+    // backend, no borra la fila). Si sale bien, la sesión ya no sirve --
+    // se limpia y se vuelve al login.
     if (confirmado == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Falta conectar esto al backend — todavía no hay endpoint de eliminación de cuenta.')),
-      );
+      setState(() => _guardando = true);
+      try {
+        final response = await http.delete(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'));
+        if (!mounted) return;
+
+        if (response.statusCode == 200) {
+          Session.clear();
+          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No pudimos eliminar la cuenta. Intentá de nuevo.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sin conexión con el servidor')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _guardando = false);
+      }
     }
   }
 

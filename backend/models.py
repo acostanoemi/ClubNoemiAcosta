@@ -14,6 +14,7 @@ class Usuario(Base):
     fecha_nacimiento = Column(Date, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    activo = Column(Boolean, default=True)
 
     reservas = relationship("Reserva", back_populates="usuario")
 

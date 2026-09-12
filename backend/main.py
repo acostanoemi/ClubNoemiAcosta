@@ -30,13 +30,30 @@ def get_db():
 
 @app.post("/auth/register", response_model=schemas.UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def registrar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
-    user_exist = db.query(models.Usuario).filter(models.Usuario.email == usuario.email).first()
-    if user_exist:
+    user_email = db.query(models.Usuario).filter(models.Usuario.email == usuario.email).first()
+    user_dni = db.query(models.Usuario).filter(models.Usuario.dni == usuario.dni).first()
+
+    # Si el email o el DNI ya pertenecen a una cuenta activa, no se puede registrar.
+    if user_email and user_email.activo:
         raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado")
-    
-    dni_exist = db.query(models.Usuario).filter(models.Usuario.dni == usuario.dni).first()
-    if dni_exist:
+    if user_dni and user_dni.activo:
         raise HTTPException(status_code=400, detail="El DNI ya está registrado")
+
+    # Si coincide con una cuenta dada de baja (mismo email o DNI), se reactiva
+    # en vez de crear una fila nueva -- evita choques de unicidad y conserva
+    # el historial de reservas de esa cuenta.
+    cuenta_inactiva = user_email or user_dni
+    if cuenta_inactiva and not cuenta_inactiva.activo:
+        cuenta_inactiva.nombre = usuario.nombre
+        cuenta_inactiva.apellido = usuario.apellido
+        cuenta_inactiva.dni = usuario.dni
+        cuenta_inactiva.fecha_nacimiento = usuario.fecha_nacimiento
+        cuenta_inactiva.email = usuario.email
+        cuenta_inactiva.password = usuario.password
+        cuenta_inactiva.activo = True
+        db.commit()
+        db.refresh(cuenta_inactiva)
+        return cuenta_inactiva
 
     nuevo_usuario = models.Usuario(**usuario.model_dump())
     db.add(nuevo_usuario)
@@ -55,7 +72,10 @@ def login(credenciales: schemas.UsuarioLogin, db: Session = Depends(get_db)):
     
     if not user:
         raise HTTPException(status_code=401, detail="El correo electrónico no existe")
-        
+
+    if not user.activo:
+        raise HTTPException(status_code=403, detail="Esta cuenta fue dada de baja")
+
     if user.password.strip() != pass_clean:
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
     
@@ -121,6 +141,15 @@ def actualizar_usuario(usuario_id: UUID, datos: schemas.UsuarioUpdate, db: Sessi
     db.commit()
     db.refresh(usuario)
     return usuario
+
+@app.delete("/usuarios/{usuario_id}")
+def dar_de_baja_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    usuario.activo = False
+    db.commit()
+    return {"message": "Cuenta dada de baja"}
 
 # --- SEDES ---
 
