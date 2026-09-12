@@ -99,6 +99,55 @@ extension AppColorsX on BuildContext {
   AppColors get colors => Theme.of(this).extension<AppColors>()!;
 }
 
+/// Transición de página compartida por toda la app: la pantalla nueva entra
+/// deslizando desde la derecha con un fade rápido al inicio, y la pantalla
+/// anterior se corre levemente hacia la izquierda (efecto parallax), como
+/// un push nativo de iOS/Android — en vez del fade plano/instantáneo que
+/// trae Flutter Web por defecto en target linux/desktop.
+///
+/// Se aplica una sola vez acá, vía ThemeData.pageTransitionsTheme, y cubre
+/// automáticamente TODA navegación con Navigator.push/pushNamed/
+/// pushReplacementNamed/pushNamedAndRemoveUntil/MaterialPageRoute en toda
+/// la app — no hace falta tocar cada pantalla.
+class AppSlidePageTransitionsBuilder extends PageTransitionsBuilder {
+  const AppSlidePageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final entrada = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
+    final salida = CurvedAnimation(parent: secondaryAnimation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
+
+    final deslizeEntrada = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(entrada);
+    final deslizeSalida = Tween<Offset>(begin: Offset.zero, end: const Offset(-0.22, 0)).animate(salida);
+    final fadeEntrada = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: animation, curve: const Interval(0.0, 0.35)));
+
+    return SlideTransition(
+      position: deslizeSalida,
+      child: SlideTransition(
+        position: deslizeEntrada,
+        child: FadeTransition(opacity: fadeEntrada, child: child),
+      ),
+    );
+  }
+}
+
+const _appPageTransitionsTheme = PageTransitionsTheme(
+  builders: {
+    TargetPlatform.android: AppSlidePageTransitionsBuilder(),
+    TargetPlatform.iOS: AppSlidePageTransitionsBuilder(),
+    TargetPlatform.linux: AppSlidePageTransitionsBuilder(),
+    TargetPlatform.macOS: AppSlidePageTransitionsBuilder(),
+    TargetPlatform.windows: AppSlidePageTransitionsBuilder(),
+    TargetPlatform.fuchsia: AppSlidePageTransitionsBuilder(),
+  },
+);
+
 ThemeData buildDarkTheme() {
   return ThemeData.dark().copyWith(
     scaffoldBackgroundColor: AppColors.dark.background,
@@ -106,6 +155,7 @@ ThemeData buildDarkTheme() {
       primary: AppColors.dark.accent,
       surface: AppColors.dark.background,
     ),
+    pageTransitionsTheme: _appPageTransitionsTheme,
     extensions: const [AppColors.dark],
   );
 }
@@ -117,6 +167,7 @@ ThemeData buildLightTheme() {
       primary: AppColors.light.accent,
       surface: AppColors.light.background,
     ),
+    pageTransitionsTheme: _appPageTransitionsTheme,
     extensions: const [AppColors.light],
   );
 }
