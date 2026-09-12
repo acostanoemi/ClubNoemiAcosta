@@ -90,6 +90,38 @@ def change_password(data: schemas.ChangePassword, db: Session = Depends(get_db))
     db.commit()
     return {"message": "Contraseña actualizada exitosamente"}
 
+# --- USUARIOS ---
+
+@app.get("/usuarios/{usuario_id}", response_model=schemas.UsuarioResponse)
+def obtener_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return usuario
+
+@app.patch("/usuarios/{usuario_id}", response_model=schemas.UsuarioResponse)
+def actualizar_usuario(usuario_id: UUID, datos: schemas.UsuarioUpdate, db: Session = Depends(get_db)):
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    actualizaciones = datos.model_dump(exclude_unset=True)
+
+    if "dni" in actualizaciones:
+        dni_exist = db.query(models.Usuario).filter(
+            models.Usuario.dni == actualizaciones["dni"],
+            models.Usuario.id != usuario_id
+        ).first()
+        if dni_exist:
+            raise HTTPException(status_code=400, detail="El DNI ya esta registrado")
+
+    for campo, valor in actualizaciones.items():
+        setattr(usuario, campo, valor)
+
+    db.commit()
+    db.refresh(usuario)
+    return usuario
+
 # --- SEDES ---
 
 @app.get("/sedes", response_model=List[schemas.SedeResponse])

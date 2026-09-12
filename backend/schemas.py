@@ -20,6 +20,12 @@ class RecoverPassword(BaseModel):
     email: EmailStr
     new_password: str
 
+class UsuarioUpdate(BaseModel):
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    dni: Optional[str] = None
+    fecha_nacimiento: Optional[date] = None
+
 class UsuarioResponse(BaseModel):
     id: UUID
     nombre: str
