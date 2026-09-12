@@ -8,10 +8,12 @@ import '../models/reserva.dart';
 import '../session.dart';
 import '../widgets/profile_dropdown.dart';
 import '../widgets/notifications_dropdown.dart';
+import 'consultar_canchas_screen.dart';
+import '../theme/app_theme.dart';
 
 const String _apiBaseUrl = "http://localhost:8000";
 
-// El backend devuelve "08:00:00" — para mostrar solo recortamos a "08:00".
+// El backend devuelve "08:00:00" -- para mostrar solo recortamos a "08:00".
 String _hhmm(String hora) => hora.length >= 5 ? hora.substring(0, 5) : hora;
 
 const _diasSemana = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
@@ -50,7 +52,9 @@ String _formatearMonto(double monto) {
   return '\$ $buffer';
 }
 
-// Dibuja las líneas de una cancha de fútbol de forma vectorial —
+
+
+// Dibuja las líneas de una cancha de fútbol de forma vectorial --
 // no depende de ningún asset de imagen.
 class _CanchaPainter extends CustomPainter {
   @override
@@ -191,9 +195,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final nombre = Session.nombre ?? '';
     final apellido = Session.apellido ?? '';
     final iniciales = (nombre.isNotEmpty && apellido.isNotEmpty) ? '${nombre[0]}${apellido[0]}' : '?';
+    final colors = context.colors;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF050508),
+      backgroundColor: colors.background,
       body: Stack(
         children: [
           SafeArea(
@@ -204,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Hero — cancha dibujada vectorialmente (sin asset de imagen) + glow inferior, como el Figma.
+                // Hero -- cancha dibujada vectorialmente (sin asset de imagen) + glow inferior, como el Figma.
                 SizedBox(
                   width: double.infinity,
                   height: 340,
@@ -301,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 16),
-                      // Próxima reserva — real, cruzando /reservas con /sedes y /espacios.
+                      // Próxima reserva -- real, cruzando /reservas con /sedes y /espacios.
                       Builder(builder: (context) {
                         final reserva = _proximaReserva;
                         if (reserva == null) {
@@ -309,16 +314,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: colors.surface,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                              border: Border.all(color: colors.surfaceBorder),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('PRÓXIMA RESERVA', style: TextStyle(color: kAccentColor, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                                Text('PRÓXIMA RESERVA', style: TextStyle(color: colors.accentText, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1.5)),
                                 const SizedBox(height: 10),
-                                Text('Todavía no tenés reservas.', style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 13, fontFamily: 'Inter')),
+                                Text('Todavía no tenés reservas.', style: TextStyle(color: colors.textSecondary, fontSize: 13, fontFamily: 'Inter')),
                               ],
                             ),
                           );
@@ -332,9 +337,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: kAccentColor.withValues(alpha: 0.08),
+                            color: colors.accent.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: kAccentColor.withValues(alpha: 0.25)),
+                            border: Border.all(color: colors.accent.withValues(alpha: 0.25)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,8 +347,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text('PRÓXIMA RESERVA', style: TextStyle(color: kAccentColor, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1.5)),
-                                  Text(enCuantos, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12, fontFamily: 'Inter')),
+                                  Text('PRÓXIMA RESERVA', style: TextStyle(color: colors.accentText, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                                  Text(enCuantos, style: TextStyle(color: colors.textSecondary, fontSize: 12, fontFamily: 'Inter')),
                                 ],
                               ),
                               const SizedBox(height: 10),
@@ -352,42 +357,72 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Container(
                                     width: 44,
                                     height: 44,
-                                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
-                                    child: const Icon(Icons.sports_tennis, color: kAccentColor, size: 20),
+                                    decoration: BoxDecoration(color: colors.surface, borderRadius: BorderRadius.circular(10)),
+                                    child: Icon(Icons.sports_tennis, color: colors.accentText, size: 20),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(sede?.nombre ?? 'Sede', style: const TextStyle(color: Colors.white, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
-                                        Text(espacio?.nombre ?? '', style: TextStyle(color: Colors.white.withValues(alpha: 0.40), fontSize: 11, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        Text(sede?.nombre ?? 'Sede', style: TextStyle(color: colors.textPrimary, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                                        Text(espacio?.nombre ?? '', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
                                       ],
                                     ),
                                   ),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text(_hhmm(reserva.horaInicio), style: const TextStyle(color: kAccentColor, fontSize: 16, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
-                                      Text(_hhmm(reserva.horaFin), style: TextStyle(color: Colors.white.withValues(alpha: 0.30), fontSize: 12, fontFamily: 'Inter')),
+                                      Text(_hhmm(reserva.horaInicio), style: TextStyle(color: colors.accentText, fontSize: 16, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
+                                      Text(_hhmm(reserva.horaFin), style: TextStyle(color: colors.textMuted, fontSize: 12, fontFamily: 'Inter')),
                                     ],
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              Divider(color: Colors.white.withValues(alpha: 0.08)),
+                              Divider(color: colors.surfaceBorder),
                               const SizedBox(height: 6),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(_formatearFecha(reserva.fecha), style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 13, fontFamily: 'Inter')),
-                                  Text(_formatearMonto(reserva.montoTotal), style: const TextStyle(color: Colors.white, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
+                                  Text(_formatearFecha(reserva.fecha), style: TextStyle(color: colors.textSecondary, fontSize: 13, fontFamily: 'Inter')),
+                                  Text(_formatearMonto(reserva.montoTotal), style: TextStyle(color: colors.textPrimary, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
                                 ],
                               ),
                             ],
                           ),
                         );
                       }),
+                      const SizedBox(height: 16),
+                      // Entrada a Consultar Canchas (CU13) -- buscador por filtros,
+                      // complementa el flujo Home -> Sedes -> Cancha -> Horarios.
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ConsultarCanchasScreen())),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: colors.surfaceBorder),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(color: colors.accent.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(10)),
+                                child: Icon(Icons.search, color: colors.accentText, size: 18),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text('Buscar disponibilidad', style: TextStyle(color: colors.textPrimary, fontSize: 14, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                              ),
+                              Icon(Icons.chevron_right, color: colors.textMuted, size: 20),
+                            ],
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 24),
 
                       SizedBox(
@@ -406,11 +441,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                                       decoration: BoxDecoration(
-                                        color: activo ? kAccentColor : Colors.white.withValues(alpha: 0.06),
+                                        color: activo ? colors.accent : colors.surface,
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       alignment: Alignment.center,
-                                      child: Text(d, style: TextStyle(color: activo ? Colors.black : Colors.white70, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                                      child: Text(d, style: TextStyle(color: activo ? Colors.black : colors.textSecondary, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
                                     ),
                                   );
                                 },
@@ -421,14 +456,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('SEDES DISPONIBLES', style: TextStyle(color: Colors.white, fontSize: 17, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800)),
+                          Text('SEDES DISPONIBLES', style: TextStyle(color: colors.textPrimary, fontSize: 17, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800)),
                           GestureDetector(
                             onTap: () => Navigator.pushNamed(context, '/sedes'),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Text('Ver todas', style: TextStyle(color: kAccentColor, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
-                                SizedBox(width: 2),
-                                Icon(Icons.arrow_forward, color: kAccentColor, size: 14),
+                                Text('Ver todas', style: TextStyle(color: colors.accentText, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                                const SizedBox(width: 2),
+                                Icon(Icons.arrow_forward, color: colors.accentText, size: 14),
                               ],
                             ),
                           ),
@@ -440,7 +475,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
                 if (_loading)
-                  const Padding(padding: EdgeInsets.symmetric(vertical: 40), child: Center(child: CircularProgressIndicator(color: kAccentColor)))
+                  Padding(padding: const EdgeInsets.symmetric(vertical: 40), child: Center(child: CircularProgressIndicator(color: colors.accent)))
                 else if (_error != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -448,14 +483,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text(_error!, style: TextStyle(color: Colors.red[300], fontFamily: 'Inter')),
                         const SizedBox(height: 8),
-                        TextButton(onPressed: _cargarDatos, child: const Text('Reintentar', style: TextStyle(color: kAccentColor))),
+                        TextButton(onPressed: _cargarDatos, child: Text('Reintentar', style: TextStyle(color: colors.accentText))),
                       ],
                     ),
                   )
                 else if (_sedesFiltradas.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                    child: Text('No hay sedes para este filtro.', style: TextStyle(color: Colors.white38, fontFamily: 'Inter')),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    child: Text('No hay sedes para este filtro.', style: TextStyle(color: colors.textMuted, fontFamily: 'Inter')),
                   )
                 else
                   SizedBox(
@@ -472,20 +507,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 220,
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.05),
+                            color: colors.surface,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                            border: Border.all(color: colors.surfaceBorder),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(s.nombre.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 17, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800)),
+                              Text(s.nombre.toUpperCase(), style: TextStyle(color: colors.textPrimary, fontSize: 17, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800)),
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.location_on_outlined, size: 13, color: Colors.white.withValues(alpha: 0.40)),
+                                  Icon(Icons.location_on_outlined, size: 13, color: colors.textMuted),
                                   const SizedBox(width: 4),
-                                  Expanded(child: Text(s.direccion, style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 12, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  Expanded(child: Text(s.direccion, style: TextStyle(color: colors.textSecondary, fontSize: 12, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis)),
                                 ],
                               ),
                               const SizedBox(height: 10),
@@ -493,21 +528,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                 spacing: 6,
                                 runSpacing: 6,
                                 children: deportes.isEmpty
-                                    ? [Text('Sin espacios cargados', style: TextStyle(color: Colors.white.withValues(alpha: 0.30), fontSize: 11, fontFamily: 'Inter'))]
+                                    ? [Text('Sin espacios cargados', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter'))]
                                     : deportes.map((d) {
+                                        final colorD = colorDeporte(d);
                                         return Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(color: kAccentColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
-                                          child: Text(d, style: const TextStyle(color: kAccentColor, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                                          decoration: BoxDecoration(color: colorD.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(20)),
+                                          child: Text(d, style: TextStyle(color: colorD, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
                                         );
                                       }).toList(),
                               ),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  Icon(Icons.access_time, size: 12, color: Colors.white.withValues(alpha: 0.30)),
+                                  Icon(Icons.access_time, size: 12, color: colors.textMuted),
                                   const SizedBox(width: 4),
-                                  Text('${_hhmm(s.horaApertura)} - ${_hhmm(s.horaCierre)}', style: TextStyle(color: Colors.white.withValues(alpha: 0.30), fontSize: 11, fontFamily: 'Inter')),
+                                  Text('${_hhmm(s.horaApertura)} - ${_hhmm(s.horaCierre)}', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter')),
                                 ],
                               ),
                             ],
@@ -579,24 +615,24 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF0A0A0E),
-          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+          color: colors.bottomSheetBackground,
+          border: Border(top: BorderSide(color: colors.surfaceBorder)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _navItem(Icons.home, 'INICIO', true, () {}),
-            _navItem(Icons.apartment_outlined, 'SEDES', false, () => Navigator.pushNamed(context, '/sedes')),
-            _navItem(Icons.calendar_today_outlined, 'RESERVAS', false, () {}),
-            _navItem(Icons.person_outline, 'PERFIL', false, () => Navigator.pushNamed(context, '/perfil')),
+            _navItem(colors, Icons.home, 'INICIO', true, () {}),
+            _navItem(colors, Icons.apartment_outlined, 'SEDES', false, () => Navigator.pushNamed(context, '/sedes')),
+            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => Navigator.pushNamed(context, '/reservas')),
+            _navItem(colors, Icons.person_outline, 'PERFIL', false, () => Navigator.pushNamed(context, '/perfil')),
           ],
         ),
       ),
     );
   }
 
-  Widget _navItem(IconData icon, String label, bool active, VoidCallback onTap) {
-    final color = active ? kAccentColor : Colors.white38;
+  Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
+    final color = active ? colors.accentText : colors.textMuted;
     return GestureDetector(
       onTap: onTap,
       child: Column(

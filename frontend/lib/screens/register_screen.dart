@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/shared_widgets.dart';
+import '../theme/app_theme.dart';
 
 // Mismo host que main.dart usa para /auth/login.
 const String _apiBaseUrl = "http://localhost:8000";
@@ -275,11 +276,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FieldLabel('NOMBRE *', hasError: _fieldErrors.contains('nombre')),
+                  FieldLabel('NOMBRE *', hasError: _fieldErrors.contains('nombre'), colorsOverride: AppColors.dark),
                   TextField(
                     controller: _nombreController,
                     style: const TextStyle(color: Colors.white),
-                    decoration: buildInputDecoration(context, 'Juan', hasError: _fieldErrors.contains('nombre')),
+                    decoration: buildInputDecoration(context, 'Juan', hasError: _fieldErrors.contains('nombre'), colorsOverride: AppColors.dark),
                   ),
                 ],
               ),
@@ -289,11 +290,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FieldLabel('APELLIDO *', hasError: _fieldErrors.contains('apellido')),
+                  FieldLabel('APELLIDO *', hasError: _fieldErrors.contains('apellido'), colorsOverride: AppColors.dark),
                   TextField(
                     controller: _apellidoController,
                     style: const TextStyle(color: Colors.white),
-                    decoration: buildInputDecoration(context, 'Pérez', hasError: _fieldErrors.contains('apellido')),
+                    decoration: buildInputDecoration(context, 'Pérez', hasError: _fieldErrors.contains('apellido'), colorsOverride: AppColors.dark),
                   ),
                 ],
               ),
@@ -301,38 +302,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        FieldLabel('DNI *', hasError: _fieldErrors.contains('dni')),
+        FieldLabel('DNI *', hasError: _fieldErrors.contains('dni'), colorsOverride: AppColors.dark),
         TextField(
           controller: _dniController,
           keyboardType: TextInputType.number,
           inputFormatters: [DniInputFormatter()],
           style: const TextStyle(color: Colors.white),
-          decoration: buildInputDecoration(context, '31.234.567', hasError: _fieldErrors.contains('dni')),
+          decoration: buildInputDecoration(context, '31.234.567', hasError: _fieldErrors.contains('dni'), colorsOverride: AppColors.dark),
         ),
         const SizedBox(height: 16),
-        FieldLabel('FECHA DE NACIMIENTO *', hasError: _fieldErrors.contains('fecha')),
+        FieldLabel('FECHA DE NACIMIENTO *', hasError: _fieldErrors.contains('fecha'), colorsOverride: AppColors.dark),
         TextField(
           controller: _birthDateController,
           readOnly: true,
           onTap: _pickBirthDate,
           style: const TextStyle(color: Colors.white),
-          decoration: buildInputDecoration(context, '', hasError: _fieldErrors.contains('fecha')),
+          decoration: buildInputDecoration(context, '', hasError: _fieldErrors.contains('fecha'), colorsOverride: AppColors.dark),
         ),
         const SizedBox(height: 16),
-        FieldLabel('EMAIL *', hasError: _fieldErrors.contains('email')),
+        FieldLabel('EMAIL *', hasError: _fieldErrors.contains('email'), colorsOverride: AppColors.dark),
         TextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           style: const TextStyle(color: Colors.white),
-          decoration: buildInputDecoration(context, 'juan@email.com', hasError: _fieldErrors.contains('email')),
+          decoration: buildInputDecoration(context, 'juan@email.com', hasError: _fieldErrors.contains('email'), colorsOverride: AppColors.dark),
         ),
         const SizedBox(height: 16),
-        FieldLabel('CONTRASEÑA *', hasError: _fieldErrors.contains('password')),
+        FieldLabel('CONTRASEÑA *', hasError: _fieldErrors.contains('password'), colorsOverride: AppColors.dark),
         TextField(
           controller: _passwordController,
           obscureText: _obscurePassword,
           style: const TextStyle(color: Colors.white),
-          decoration: buildInputDecoration(context, 'Mínimo 8 caracteres', hasError: _fieldErrors.contains('password')).copyWith(
+          decoration: buildInputDecoration(context, 'Mínimo 8 caracteres', hasError: _fieldErrors.contains('password'), colorsOverride: AppColors.dark).copyWith(
             suffixIcon: IconButton(
               icon: SvgPicture.asset('assets/icons/Icon.svg', width: 16, height: 16),
               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -366,4 +367,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-

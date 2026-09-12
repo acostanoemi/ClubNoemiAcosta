@@ -161,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    const colors = AppColors.dark;
     final nombre = Session.nombre ?? '';
     final apellido = Session.apellido ?? '';
     final iniciales = (nombre.isNotEmpty && apellido.isNotEmpty) ? '${nombre[0]}${apellido[0]}' : '?';
@@ -214,14 +214,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     style: TextStyle(color: colors.textPrimary),
                     keyboardType: TextInputType.emailAddress,
-                    decoration: buildInputDecoration(context, 'Email'),
+                    decoration: buildInputDecoration(context, 'Email', colorsOverride: AppColors.dark),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     style: TextStyle(color: colors.textPrimary),
-                    decoration: buildInputDecoration(context, 'Contraseña').copyWith(
+                    decoration: buildInputDecoration(context, 'Contraseña', colorsOverride: AppColors.dark).copyWith(
                       suffixIcon: IconButton(
                         icon: SvgPicture.asset(
                           'assets/icons/Icon.svg',

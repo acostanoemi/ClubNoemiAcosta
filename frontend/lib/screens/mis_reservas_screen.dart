@@ -172,7 +172,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                         TextSpan(
                           children: [
                             TextSpan(text: 'MIS ', style: TextStyle(color: colors.textPrimary)),
-                            TextSpan(text: 'RESERVAS', style: TextStyle(color: colors.accent)),
+                            TextSpan(text: 'RESERVAS', style: TextStyle(color: colors.accentText)),
                           ],
                         ),
                         style: const TextStyle(fontSize: 32, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900),
@@ -209,7 +209,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                       children: [
                         Text(_error!, style: TextStyle(color: Colors.red[300], fontFamily: 'Inter')),
                         const SizedBox(height: 8),
-                        TextButton(onPressed: _cargarDatos, child: Text('Reintentar', style: TextStyle(color: colors.accent))),
+                        TextButton(onPressed: _cargarDatos, child: Text('Reintentar', style: TextStyle(color: colors.accentText))),
                       ],
                     ),
                   )
@@ -319,7 +319,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                             child: Text(
                               item.esActiva ? 'Activa' : 'Completada',
                               style: TextStyle(
-                                color: item.esActiva ? colors.accent : Colors.green[400],
+                                color: item.esActiva ? colors.accentText : Colors.green[400],
                                 fontSize: 11,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w800,
@@ -352,7 +352,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(formatearMonto(item.reserva.montoTotal), style: TextStyle(color: colors.accent, fontSize: 20, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
+                Text(formatearMonto(item.reserva.montoTotal), style: TextStyle(color: colors.accentText, fontSize: 20, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
                 if (item.esActiva)
                   GestureDetector(
                     onTap: () => _abrirCancelar(item),
@@ -382,7 +382,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
   }
 
   Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
-    final color = active ? colors.accent : colors.textMuted;
+    final color = active ? colors.accentText : colors.textMuted;
     return GestureDetector(
       onTap: onTap,
       child: Column(

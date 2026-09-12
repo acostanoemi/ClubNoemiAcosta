@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/shared_widgets.dart';
+import '../theme/app_theme.dart';
 
 // TODO: no existe endpoint de notificaciones en el backend todavía.
 // Esta lista es mock para completar el diseño.
@@ -10,6 +10,7 @@ class NotificationsDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final notis = [
       ('Reserva confirmada – Tenis 19:00', true),
       ('Recordatorio: Fútbol el 20 de agosto', false),
@@ -22,9 +23,9 @@ class NotificationsDropdown extends StatelessWidget {
         width: 300,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D0D12),
+          color: colors.bottomSheetBackground,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          border: Border.all(color: colors.surfaceBorder),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -33,10 +34,10 @@ class NotificationsDropdown extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Notificaciones', style: TextStyle(color: Colors.white, fontSize: 17, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800)),
+                Text('Notificaciones', style: TextStyle(color: colors.textPrimary, fontSize: 17, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800)),
                 GestureDetector(
                   onTap: onClose,
-                  child: const Icon(Icons.close, color: Colors.white38, size: 20),
+                  child: Icon(Icons.close, color: colors.textMuted, size: 20),
                 ),
               ],
             ),
@@ -45,7 +46,7 @@ class NotificationsDropdown extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -57,14 +58,14 @@ class NotificationsDropdown extends StatelessWidget {
                           width: 7,
                           height: 7,
                           decoration: BoxDecoration(
-                            color: n.$2 ? kAccentColor : Colors.white24,
+                            color: n.$2 ? colors.accentText : colors.textMuted,
                             shape: BoxShape.circle,
                           ),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(n.$1, style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'Inter')),
+                        child: Text(n.$1, style: TextStyle(color: colors.textPrimary, fontSize: 13, fontFamily: 'Inter')),
                       ),
                     ],
                   ),

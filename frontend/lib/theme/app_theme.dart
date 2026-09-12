@@ -14,6 +14,10 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color textSecondary; // ~45% alpha original
   final Color textMuted; // ~30% alpha original
   final Color accent;
+  final Color accentText; // accent usado como TEXTO/ícono (precios, badges,
+  // nav activo) — en modo claro el lima puro se lee mal sobre blanco, así
+  // que acá va una versión más oscura. El acento como FONDO de botón sigue
+  // siendo `accent` en los dos temas (ese sí funciona bien siempre).
   final Color overlayScrim; // gradiente sobre imágenes de fondo (AppBackground)
 
   const AppColors({
@@ -25,6 +29,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.textSecondary,
     required this.textMuted,
     required this.accent,
+    required this.accentText,
     required this.overlayScrim,
   });
 
@@ -37,6 +42,7 @@ class AppColors extends ThemeExtension<AppColors> {
     textSecondary: Color(0x73FFFFFF), // white 45%
     textMuted: Color(0x4DFFFFFF), // white 30%
     accent: Color(0xFFD4FF00),
+    accentText: Color(0xFFD4FF00), // sobre fondo oscuro el lima puro se lee bien
     overlayScrim: Color(0xE0000000), // black 88%
   );
 
@@ -49,6 +55,7 @@ class AppColors extends ThemeExtension<AppColors> {
     textSecondary: Color(0x99000000), // black 60%
     textMuted: Color(0x66000000), // black 40%
     accent: Color(0xFFD4FF00),
+    accentText: Color(0xFF5E7000), // versión oscura del lima, legible sobre blanco
     overlayScrim: Color(0xE0FFFFFF), // white 88% — provisorio, ajustar con Figma claro
   );
 
@@ -62,6 +69,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? textSecondary,
     Color? textMuted,
     Color? accent,
+    Color? accentText,
     Color? overlayScrim,
   }) {
     return AppColors(
@@ -73,6 +81,7 @@ class AppColors extends ThemeExtension<AppColors> {
       textSecondary: textSecondary ?? this.textSecondary,
       textMuted: textMuted ?? this.textMuted,
       accent: accent ?? this.accent,
+      accentText: accentText ?? this.accentText,
       overlayScrim: overlayScrim ?? this.overlayScrim,
     );
   }
@@ -89,6 +98,7 @@ class AppColors extends ThemeExtension<AppColors> {
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,
       accent: Color.lerp(accent, other.accent, t)!,
+      accentText: Color.lerp(accentText, other.accentText, t)!,
       overlayScrim: Color.lerp(overlayScrim, other.overlayScrim, t)!,
     );
   }

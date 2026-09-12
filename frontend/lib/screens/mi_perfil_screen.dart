@@ -33,6 +33,78 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     }
   }
 
+  Future<void> _confirmarEliminarCuenta() async {
+    final colors = context.colors;
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: colors.bottomSheetBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.red[400], size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('ZONA DE PELIGRO', style: TextStyle(color: Colors.red[400], fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                '¿Estás seguro? Esta acción elimina todos tus datos permanentemente.',
+                style: TextStyle(color: colors.textSecondary, fontSize: 14, fontFamily: 'Inter'),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colors.textPrimary,
+                        side: BorderSide(color: colors.surfaceBorder),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[600],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text('Eliminar'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    // TODO: llamar al endpoint de eliminación de cuenta cuando exista en el
+    // backend. Por ahora solo se muestra la confirmación, sin efecto real.
+    if (confirmado == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Falta conectar esto al backend — todavía no hay endpoint de eliminación de cuenta.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -51,7 +123,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                 TextSpan(
                   children: [
                     TextSpan(text: 'MI ', style: TextStyle(color: colors.textPrimary)),
-                    TextSpan(text: 'PERFIL', style: TextStyle(color: colors.accent)),
+                    TextSpan(text: 'PERFIL', style: TextStyle(color: colors.accentText)),
                   ],
                 ),
                 style: const TextStyle(
@@ -97,7 +169,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                         const SizedBox(height: 4),
                         Text(
                           'MIEMBRO ACTIVO',
-                          style: TextStyle(color: colors.accent, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1.2),
+                          style: TextStyle(color: colors.accentText, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1.2),
                         ),
                       ],
                     ),
@@ -157,8 +229,8 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                           onPressed: () {
                             // TODO: habilitar edición cuando exista el endpoint de update de perfil.
                           },
-                          icon: Icon(Icons.edit_outlined, size: 16, color: colors.accent),
-                          label: Text('Editar', style: TextStyle(color: colors.accent, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                          icon: Icon(Icons.edit_outlined, size: 16, color: colors.accentText),
+                          label: Text('Editar', style: TextStyle(color: colors.accentText, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
                           style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
                         ),
                       ],
@@ -181,7 +253,6 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-                            const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
                   color: colors.surface,
@@ -247,9 +318,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          // TODO: endpoint de eliminación de cuenta, cuando exista.
-                        },
+                        onPressed: _confirmarEliminarCuenta,
                         icon: const Icon(Icons.delete_outline, size: 18),
                         label: const Text('Eliminar cuenta'),
                         style: ElevatedButton.styleFrom(
@@ -267,7 +336,6 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
           ),
         ),
       ),
-      // Barra inferior solo visual por ahora — Inicio/Sedes/Reservas todavía no existen como pantallas.
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
@@ -312,18 +380,18 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     );
   }
 
- Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
-  final color = active ? colors.accent : colors.textMuted;
-  return GestureDetector(
-    onTap: onTap,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 22),
-        const SizedBox(height: 2),
-        Text(label, style: TextStyle(color: color, fontSize: 9, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
-      ],
-    ),
-  );
-}
+  Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
+    final color = active ? colors.accentText : colors.textMuted;
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: color, fontSize: 9, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
 }

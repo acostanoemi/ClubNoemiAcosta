@@ -10,10 +10,15 @@ const Color kAccentColor = Color(0xFFD4FF00);
 /// Fondo compartido: foto de fondo + gradiente, usado en Login, Register y
 /// ForgotPassword. Estas pantallas van SIEMPRE en modo oscuro, sin importar
 /// el tema elegido por el usuario en Mi Perfil — el toggle claro/oscuro
-/// aplica solo a la parte logueada de la app (Home, Sedes, Mi Perfil...).
-/// El Figma nunca mostró una versión clara de estas pantallas: la foto +
-/// overlay oscuro es el diseño fijo. Por eso se fuerza buildDarkTheme() acá,
-/// en un solo lugar, en vez de tocar cada pantalla que usa este widget.
+/// aplica solo a la parte logueada de la app. El Figma nunca mostró una
+/// versión clara de estas pantallas: la foto + overlay oscuro es fijo.
+///
+/// IMPORTANTE: este widget NO fuerza el tema vía Theme() — Theme.of(context)
+/// solo mira hacia arriba en el árbol, así que un override puesto acá adentro
+/// nunca lo ven las pantallas que llaman a context.colors con SU PROPIO
+/// contexto (el de más arriba). Por eso Login/Register/ForgotPassword usan
+/// directamente la constante AppColors.dark (o el parámetro colorsOverride
+/// de buildInputDecoration/FieldLabel) en vez de context.colors.
 class AppBackground extends StatelessWidget {
   final Widget child;
 
@@ -21,47 +26,47 @@ class AppBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.dark;
-    return Theme(
-      data: buildDarkTheme(),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/Image.png',
-              fit: BoxFit.cover,
-            ),
+    const colors = AppColors.dark;
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/images/Image.png',
+            fit: BoxFit.cover,
           ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    colors.overlayScrim,
-                    colors.overlayScrim,
-                    colors.overlayScrim.withValues(alpha: colors.overlayScrim.a * 0.95),
-                  ],
-                ),
+        ),
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  colors.overlayScrim,
+                  colors.overlayScrim,
+                  colors.overlayScrim.withValues(alpha: colors.overlayScrim.a * 0.95),
+                ],
               ),
             ),
           ),
-          // El contenido va envuelto en Positioned.fill también. Si no,
-          // el Stack termina midiendo lo mismo que el contenido (por ejemplo
-          // un SingleChildScrollView se achica al alto de sus campos), y el
-          // fondo se corta justo ahí en vez de cubrir toda la pantalla.
-          Positioned.fill(child: child),
-        ],
-      ),
+        ),
+        // El contenido va envuelto en Positioned.fill también. Si no,
+        // el Stack termina midiendo lo mismo que el contenido (por ejemplo
+        // un SingleChildScrollView se achica al alto de sus campos), y el
+        // fondo se corta justo ahí en vez de cubrir toda la pantalla.
+        Positioned.fill(child: child),
+      ],
     );
   }
 }
 
-/// Decoración compartida para TextFields. `hasError` pinta el borde rojo
-/// (usado en validación de campos vacíos y en el caso "usuario ya registrado").
-InputDecoration buildInputDecoration(BuildContext context, String label, {bool hasError = false}) {
-  final colors = context.colors;
+/// Decoración compartida para TextFields. `hasError` pinta el borde rojo.
+/// `colorsOverride` fuerza una paleta puntual (ej. AppColors.dark en las
+/// pantallas de auth) en vez de leer el tema ambiente vía context.colors —
+/// necesario porque esas pantallas deben verse siempre oscuras sin importar
+/// el modo claro/oscuro elegido en el resto de la app.
+InputDecoration buildInputDecoration(BuildContext context, String label, {bool hasError = false, AppColors? colorsOverride}) {
+  final colors = colorsOverride ?? context.colors;
   final errorColor = Colors.red[400]!;
   return InputDecoration(
     hintText: label,
@@ -84,20 +89,23 @@ InputDecoration buildInputDecoration(BuildContext context, String label, {bool h
 }
 
 /// Label tipo "NOMBRE *" arriba de cada campo, como en el Figma.
+/// `colorsOverride`: mismo motivo que en buildInputDecoration.
 class FieldLabel extends StatelessWidget {
   final String text;
   final bool hasError;
+  final AppColors? colorsOverride;
 
-  const FieldLabel(this.text, {super.key, this.hasError = false});
+  const FieldLabel(this.text, {super.key, this.hasError = false, this.colorsOverride});
 
   @override
   Widget build(BuildContext context) {
+    final colors = colorsOverride ?? context.colors;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
         style: TextStyle(
-          color: hasError ? Colors.red[300] : context.colors.textSecondary,
+          color: hasError ? Colors.red[300] : colors.textSecondary,
           fontSize: 11,
           fontFamily: 'Inter',
           fontWeight: FontWeight.w600,
@@ -160,3 +168,16 @@ class DniInputFormatter extends TextInputFormatter {
     );
   }
 }
+
+/// Colores distintos por deporte, usados en los tags de las tarjetas de
+/// sede (Home, Sedes) -- no confundir con `accent`, que es el color de
+/// marca general de la app.
+const Map<String, Color> coloresDeporte = {
+  'Fútbol': Color(0xFF2ECC71),
+  'Tenis': Color(0xFFE67E22),
+  'Hockey': Color(0xFF9B59B6),
+  'Golf': Color(0xFFD4AC0D),
+  'Vóley': Color(0xFF1F618D),
+};
+
+Color colorDeporte(String deporte) => coloresDeporte[deporte] ?? kAccentColor;
