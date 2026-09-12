@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../widgets/shared_widgets.dart';
 import '../session.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_scope.dart';
 import 'cambiar_contrasena_screen.dart';
 
-// TODO: reemplazar por datos reales del usuario logueado una vez que
-// el login guarde el token/id de sesión (por ahora no persiste nada).
+const String _apiBaseUrl = "http://localhost:8000";
+
 class MiPerfilScreen extends StatefulWidget {
   const MiPerfilScreen({super.key});
 
@@ -16,13 +19,152 @@ class MiPerfilScreen extends StatefulWidget {
 
 class _MiPerfilScreenState extends State<MiPerfilScreen> {
   bool _mostrarBannerActualizada = false;
+  bool _editando = false;
+  bool _guardando = false;
+  bool _cargandoDatos = true;
 
-  // Mock — reemplazar por el usuario real.
-  final _nombre = Session.nombre ?? '';
-  final _apellido = Session.apellido ?? '';
-  final _dni = '31.234.567';
-  final _fechaNacimiento = '1990-05-15';
+  // Nombre/apellido/email ya llegan del login vía Session. DNI y fecha de
+  // nacimiento no, así que se piden con GET /usuarios/{id} al entrar.
+  String _nombre = Session.nombre ?? '';
+  String _apellido = Session.apellido ?? '';
   final _email = Session.email ?? '';
+  String? _dni;
+  DateTime? _fechaNacimiento;
+  DateTime? _fechaEditando; // borrador de fecha mientras se edita -- solo se
+  // aplica a _fechaNacimiento si se toca "Guardar", nunca con "Cancelar".
+
+  final _nombreController = TextEditingController();
+  final _apellidoController = TextEditingController();
+  final _dniController = TextEditingController();
+  final _fechaController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarUsuario();
+  }
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _apellidoController.dispose();
+    _dniController.dispose();
+    _fechaController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _cargarUsuario() async {
+    if (Session.id == null) return;
+    try {
+      final response = await http.get(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'));
+      if (!mounted) return;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _nombre = data['nombre'] ?? _nombre;
+          _apellido = data['apellido'] ?? _apellido;
+          _dni = data['dni']?.toString();
+          if (data['fecha_nacimiento'] != null) {
+            _fechaNacimiento = DateTime.tryParse(data['fecha_nacimiento']);
+          }
+        });
+      }
+    } catch (e) {
+      // Si falla, los campos de solo lectura muestran "—" y se puede
+      // reintentar entrando de nuevo a la pantalla; no es crítico para
+      // el resto de Mi Perfil (nombre/apellido/email ya vienen del login).
+    } finally {
+      if (mounted) setState(() => _cargandoDatos = false);
+    }
+  }
+
+  String get _fechaFormateada {
+    if (_fechaNacimiento == null) return '—';
+    final f = _fechaNacimiento!;
+    return '${f.year}-${f.month.toString().padLeft(2, '0')}-${f.day.toString().padLeft(2, '0')}';
+  }
+
+  void _iniciarEdicion() {
+    _nombreController.text = _nombre;
+    _apellidoController.text = _apellido;
+    _dniController.text = _dni ?? '';
+    _fechaEditando = _fechaNacimiento;
+    _fechaController.text = _fechaNacimiento != null ? _fechaFormateada : '';
+    setState(() => _editando = true);
+  }
+
+  void _cancelarEdicion() {
+    setState(() => _editando = false);
+  }
+
+  Future<void> _elegirFechaNacimiento() async {
+    final elegida = await showDatePicker(
+      context: context,
+      initialDate: _fechaEditando ?? DateTime(1995, 1, 1),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (elegida != null) {
+      setState(() {
+        _fechaEditando = elegida;
+        _fechaController.text = '${elegida.year}-${elegida.month.toString().padLeft(2, '0')}-${elegida.day.toString().padLeft(2, '0')}';
+      });
+    }
+  }
+
+  Future<void> _guardarPerfil() async {
+    if (Session.id == null) return;
+
+    setState(() => _guardando = true);
+
+    final nuevoNombre = _nombreController.text.trim();
+    final nuevoApellido = _apellidoController.text.trim();
+    final nuevoDni = _dniController.text.trim();
+
+    try {
+      final response = await http.patch(
+        Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'nombre': nuevoNombre,
+          'apellido': nuevoApellido,
+          'dni': nuevoDni,
+          if (_fechaEditando != null) 'fecha_nacimiento': _fechaEditando!.toIso8601String().split('T').first,
+        }),
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _nombre = nuevoNombre;
+          _apellido = nuevoApellido;
+          _dni = nuevoDni;
+          _fechaNacimiento = _fechaEditando;
+          _editando = false;
+          _mostrarBannerActualizada = true;
+        });
+        // Para que el saludo de Home y el avatar reflejen el cambio sin
+        // tener que volver a loguearse.
+        Session.set(id: Session.id!, email: Session.email!, nombre: nuevoNombre, apellido: nuevoApellido);
+      } else {
+        String detail = 'No pudimos actualizar el perfil';
+        try {
+          final data = jsonDecode(response.body);
+          detail = data['detail'] ?? detail;
+        } catch (_) {}
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(detail), backgroundColor: Colors.red[900]));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sin conexión con el servidor')));
+      }
+    } finally {
+      if (mounted) setState(() => _guardando = false);
+    }
+  }
 
   Future<void> _irACambiarContrasena() async {
     final huboCambio = await Navigator.of(context).push<bool>(
@@ -34,66 +176,14 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
   }
 
   Future<void> _confirmarEliminarCuenta() async {
-    final colors = context.colors;
-    final confirmado = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: colors.bottomSheetBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.red[400], size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text('ZONA DE PELIGRO', style: TextStyle(color: Colors.red[400], fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                '¿Estás seguro? Esta acción elimina todos tus datos permanentemente.',
-                style: TextStyle(color: colors.textSecondary, fontSize: 14, fontFamily: 'Inter'),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: colors.textPrimary,
-                        side: BorderSide(color: colors.surfaceBorder),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text('Cancelar'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[600],
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text('Eliminar'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+    final confirmado = await showConfirmDialog(
+      context,
+      title: 'ZONA DE PELIGRO',
+      message: '¿Estás seguro? Esta acción elimina todos tus datos permanentemente.',
+      confirmLabel: 'Eliminar',
+      titleColor: Colors.red[400],
+      confirmColor: Colors.red[600]!,
+      icon: Icons.warning_amber_rounded,
     );
 
     // TODO: llamar al endpoint de eliminación de cuenta cuando exista en el
@@ -105,11 +195,26 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     }
   }
 
+  Future<void> _confirmarCerrarSesion() async {
+    final confirmado = await showConfirmDialog(
+      context,
+      title: '¿Estás seguro de cerrar sesión?',
+      message: 'Vas a tener que volver a iniciar sesión para acceder a tu cuenta.',
+      confirmLabel: 'Cerrar sesión',
+      confirmColor: Colors.red[600]!,
+    );
+
+    if (confirmado == true && mounted) {
+      Session.clear();
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final themeController = ThemeScope.of(context);
-    final iniciales = '${_nombre[0]}${_apellido[0]}';
+    final iniciales = (_nombre.isNotEmpty && _apellido.isNotEmpty) ? '${_nombre[0]}${_apellido[0]}' : '?';
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -189,7 +294,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                     children: [
                       Icon(Icons.check, color: Colors.black, size: 18),
                       SizedBox(width: 8),
-                      Text('Contraseña actualizada', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 14)),
+                      Text('Datos actualizados', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 14)),
                     ],
                   ),
                 ),
@@ -225,30 +330,89 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('DATOS PERSONALES', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
-                        TextButton.icon(
-                          onPressed: () {
-                            // TODO: habilitar edición cuando exista el endpoint de update de perfil.
-                          },
-                          icon: Icon(Icons.edit_outlined, size: 16, color: colors.accentText),
-                          label: Text('Editar', style: TextStyle(color: colors.accentText, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
-                          style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                        if (_editando)
+                          TextButton.icon(
+                            onPressed: _guardando ? null : _guardarPerfil,
+                            icon: _guardando
+                                ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: colors.accentText))
+                                : Icon(Icons.check, size: 16, color: colors.accentText),
+                            label: Text('Guardar', style: TextStyle(color: colors.accentText, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                          )
+                        else
+                          TextButton.icon(
+                            onPressed: _iniciarEdicion,
+                            icon: Icon(Icons.edit_outlined, size: 16, color: colors.accentText),
+                            label: Text('Editar', style: TextStyle(color: colors.accentText, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (_editando) ...[
+                      Row(
+                        children: [
+                          Expanded(child: _campoEditable(colors, 'NOMBRE', _nombreController)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _campoEditable(colors, 'APELLIDO', _apellidoController)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _campoEditable(colors, 'DNI', _dniController, formatters: [DniInputFormatter()], tipoNumerico: true),
+                      const SizedBox(height: 12),
+                      _campoLabel(colors, 'FECHA DE NACIMIENTO'),
+                      GestureDetector(
+                        onTap: _elegirFechaNacimiento,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: colors.surfaceBorder),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today, size: 14, color: colors.textMuted),
+                              const SizedBox(width: 8),
+                              Text(
+                                _fechaController.text.isEmpty ? 'Elegí una fecha' : _fechaController.text,
+                                style: TextStyle(color: _fechaController.text.isEmpty ? colors.textMuted : colors.textPrimary, fontSize: 14, fontFamily: 'Inter'),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: _campoSoloLectura(colors, 'NOMBRE', _nombre)),
-                        const SizedBox(width: 12),
-                        Expanded(child: _campoSoloLectura(colors, 'APELLIDO', _apellido)),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _campoSoloLectura(colors, 'DNI', _dni),
-                    const SizedBox(height: 12),
-                    _campoSoloLectura(colors, 'FECHA DE NACIMIENTO', _fechaNacimiento),
-                    const SizedBox(height: 12),
-                    _campoSoloLectura(colors, 'EMAIL (solo lectura)', _email, candado: true),
+                      ),
+                      const SizedBox(height: 12),
+                      _campoSoloLectura(colors, 'EMAIL (solo lectura)', _email, candado: true),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: _guardando ? null : _cancelarEdicion,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: colors.textSecondary,
+                            side: BorderSide(color: colors.surfaceBorder),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Text('Cancelar'),
+                        ),
+                      ),
+                    ] else ...[
+                      Row(
+                        children: [
+                          Expanded(child: _campoSoloLectura(colors, 'NOMBRE', _nombre)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _campoSoloLectura(colors, 'APELLIDO', _apellido)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _campoSoloLectura(colors, 'DNI', _cargandoDatos ? '—' : (_dni ?? '—')),
+                      const SizedBox(height: 12),
+                      _campoSoloLectura(colors, 'FECHA DE NACIMIENTO', _cargandoDatos ? '—' : _fechaFormateada),
+                      const SizedBox(height: 12),
+                      _campoSoloLectura(colors, 'EMAIL (solo lectura)', _email, candado: true),
+                    ],
                   ],
                 ),
               ),
@@ -287,10 +451,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextButton.icon(
-                  onPressed: () {
-                    // TODO: limpiar sesión real (token) cuando exista.
-                    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-                  },
+                  onPressed: _confirmarCerrarSesion,
                   icon: Icon(Icons.logout, color: colors.textSecondary, size: 18),
                   label: Text('Cerrar sesión', style: TextStyle(color: colors.textSecondary, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
                 ),
@@ -355,12 +516,18 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     );
   }
 
+  Widget _campoLabel(AppColors colors, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Text(label, style: TextStyle(color: colors.textMuted, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1)),
+    );
+  }
+
   Widget _campoSoloLectura(AppColors colors, String label, String value, {bool candado = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: colors.textMuted, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1)),
-        const SizedBox(height: 4),
+        _campoLabel(colors, label),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -375,6 +542,22 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
               if (candado) Icon(Icons.lock_outline, size: 14, color: colors.textMuted),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _campoEditable(AppColors colors, String label, TextEditingController controller, {List<TextInputFormatter>? formatters, bool tipoNumerico = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _campoLabel(colors, label),
+        TextField(
+          controller: controller,
+          keyboardType: tipoNumerico ? TextInputType.number : TextInputType.text,
+          inputFormatters: formatters,
+          style: TextStyle(color: colors.textPrimary, fontSize: 14, fontFamily: 'Inter'),
+          decoration: buildInputDecoration(context, ''),
         ),
       ],
     );

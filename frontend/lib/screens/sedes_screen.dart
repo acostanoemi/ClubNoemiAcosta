@@ -12,16 +12,6 @@ const String _apiBaseUrl = "http://localhost:8000";
 
 String _hhmm(String hora) => hora.length >= 5 ? hora.substring(0, 5) : hora;
 
-// El banner de cada tarjeta de sede no tiene foto real (no hay assets de
-// fotografía en el proyecto -- mismo criterio que Home, HorariosBottomSheet,
-// Mis Reservas, etc.), así que se usa un degradado cíclico por índice.
-const _gradientesSede = [
-  [Color(0xFF0D1B2A), Color(0xFF050508)],
-  [Color(0xFF141C0A), Color(0xFF050508)],
-  [Color(0xFF1A1030), Color(0xFF050508)],
-  [Color(0xFF0A1F1C), Color(0xFF050508)],
-];
-
 class SedesScreen extends StatefulWidget {
   const SedesScreen({super.key});
 
@@ -93,25 +83,53 @@ class _SedesScreenState extends State<SedesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                SizedBox(
+                  width: double.infinity,
+                  height: 220,
+                  child: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      Text('CLUB SPORT', style: TextStyle(color: colors.accentText, fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 3)),
-                      const SizedBox(height: 4),
-                      Text.rich(
-                        TextSpan(
+                      // Misma foto que el hero de Home, en modo claro y oscuro
+                      // por igual (es una foto, no un color de tema).
+                      Image.asset('assets/images/cancha_hero.png', fit: BoxFit.cover),
+                      // Mismo degradado negro->transparente que Home, en vez de
+                      // un tinte plano -- se ve igual en modo claro y oscuro.
+                      Positioned.fill(child: Image.asset('assets/images/hero_overlay.png', fit: BoxFit.fill)),
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Colors.transparent, colors.background],
+                              stops: const [0.6, 1.0],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            TextSpan(text: 'TODAS LAS ', style: TextStyle(color: colors.textPrimary)),
-                            TextSpan(text: 'SEDES', style: TextStyle(color: colors.accentText)),
+                            const Text('CLUB NOEMI ACOSTA', style: TextStyle(color: Color(0xFFD4FF00), fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 3)),
+                            const SizedBox(height: 4),
+                            Text.rich(
+                              const TextSpan(
+                                children: [
+                                  TextSpan(text: 'TODAS LAS ', style: TextStyle(color: Colors.white)),
+                                  TextSpan(text: 'SEDES', style: TextStyle(color: Color(0xFFD4FF00))),
+                                ],
+                              ),
+                              style: const TextStyle(fontSize: 32, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900),
+                            ),
+                            const SizedBox(height: 4),
+                            if (!_loading)
+                              Text('${_sedes.length} sedes · ${_espacios.length} canchas disponibles', style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 13, fontFamily: 'Inter')),
                           ],
                         ),
-                        style: const TextStyle(fontSize: 32, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900),
                       ),
-                      const SizedBox(height: 4),
-                      if (!_loading)
-                        Text('${_sedes.length} sedes · ${_espacios.length} canchas disponibles', style: TextStyle(color: colors.textMuted, fontSize: 13, fontFamily: 'Inter')),
                     ],
                   ),
                 ),
@@ -133,7 +151,6 @@ class _SedesScreenState extends State<SedesScreen> {
                     final s = _sedes[i];
                     final cantCanchas = _espaciosDeSede(s.id).length;
                     final deportes = _deportesDeSede(s.id);
-                    final gradiente = _gradientesSede[i % _gradientesSede.length];
 
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
@@ -141,44 +158,49 @@ class _SedesScreenState extends State<SedesScreen> {
                         borderRadius: BorderRadius.circular(18),
                         child: Column(
                           children: [
-                            Container(
+                            SizedBox(
                               height: 150,
                               width: double.infinity,
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: gradiente),
-                              ),
                               child: Stack(
                                 children: [
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(10)),
-                                      child: Column(
-                                        children: [
-                                          Text('$cantCanchas', style: const TextStyle(color: Color(0xFFD4FF00), fontSize: 16, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
-                                          Text('canchas', style: TextStyle(color: Colors.white.withValues(alpha: 0.60), fontSize: 9, fontFamily: 'Inter')),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                  Image.asset('assets/images/cancha_hero.png', fit: BoxFit.cover, width: double.infinity, height: 150),
+                                  Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.50))),
+                                  Padding(
+                                    padding: const EdgeInsets.all(14),
+                                    child: Stack(
                                       children: [
-                                        Text('SEDE ${s.nombre.toUpperCase()}', style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
-                                        const SizedBox(height: 2),
-                                        Row(
-                                          children: [
-                                            Icon(Icons.location_on_outlined, size: 13, color: Colors.white.withValues(alpha: 0.55)),
-                                            const SizedBox(width: 4),
-                                            Text(s.direccion, style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 12, fontFamily: 'Inter')),
-                                          ],
+                                        Positioned(
+                                          top: 0,
+                                          right: 0,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(10)),
+                                            child: Column(
+                                              children: [
+                                                Text('$cantCanchas', style: const TextStyle(color: Color(0xFFD4FF00), fontSize: 16, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
+                                                Text('canchas', style: TextStyle(color: Colors.white.withValues(alpha: 0.60), fontSize: 9, fontFamily: 'Inter')),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          left: 0,
+                                          right: 0,
+                                          bottom: 0,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text('SEDE ${s.nombre.toUpperCase()}', style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
+                                              const SizedBox(height: 2),
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.location_on_outlined, size: 13, color: Colors.white.withValues(alpha: 0.55)),
+                                                  const SizedBox(width: 4),
+                                                  Text(s.direccion, style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 12, fontFamily: 'Inter')),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),

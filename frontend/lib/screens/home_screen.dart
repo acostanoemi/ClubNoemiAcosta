@@ -54,38 +54,6 @@ String _formatearMonto(double monto) {
 
 
 
-// Dibuja las líneas de una cancha de fútbol de forma vectorial --
-// no depende de ningún asset de imagen.
-class _CanchaPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.10)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    final margin = size.width * 0.08;
-    final campo = Rect.fromLTWH(margin, size.height * 0.10, size.width - margin * 2, size.height * 0.55);
-    canvas.drawRect(campo, paint);
-
-    // línea media
-    canvas.drawLine(Offset(margin, campo.center.dy), Offset(campo.right, campo.center.dy), paint);
-    // círculo central
-    canvas.drawCircle(campo.center, campo.width * 0.16, paint);
-
-    // arco izquierdo
-    final arcoIzq = Rect.fromLTWH(margin, campo.top + campo.height * 0.25, campo.width * 0.14, campo.height * 0.5);
-    canvas.drawRect(arcoIzq, paint);
-
-    // arco derecho
-    final arcoDer = Rect.fromLTWH(campo.right - campo.width * 0.14, campo.top + campo.height * 0.25, campo.width * 0.14, campo.height * 0.5);
-    canvas.drawRect(arcoDer, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -212,20 +180,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Hero -- cancha dibujada vectorialmente (sin asset de imagen) + glow inferior, como el Figma.
                 SizedBox(
                   width: double.infinity,
-                  height: 340,
+                  height: 220,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF141C0A), Color(0xFF050508)],
-                          ),
-                        ),
+                      // Foto real de cancha -- misma imagen en modo claro y oscuro
+                      // a propósito (es una foto, no un color de tema).
+                      Image.asset(
+                        'assets/images/cancha_hero.png',
+                        fit: BoxFit.cover,
                       ),
-                      Positioned.fill(child: CustomPaint(painter: _CanchaPainter())),
+                      // Degradado negro->transparente (asset con canal alfa real,
+                      // no un tinte plano) para oscurecer arriba sin tapar la foto abajo.
+                      Positioned.fill(
+                        child: Image.asset('assets/images/hero_overlay.png', fit: BoxFit.fill),
+                      ),
                       Positioned.fill(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
@@ -250,9 +219,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
                         child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -289,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 12),
                       const Text('CLUB NOEMI ACOSTA', style: TextStyle(color: kAccentColor, fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 3)),
                       const SizedBox(height: 4),
                             const Text('ZONA DEPORTIVA', style: TextStyle(color: Colors.white, fontSize: 34, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),

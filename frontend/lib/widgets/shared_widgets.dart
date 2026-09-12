@@ -181,3 +181,82 @@ const Map<String, Color> coloresDeporte = {
 };
 
 Color colorDeporte(String deporte) => coloresDeporte[deporte] ?? kAccentColor;
+
+/// Diálogo de confirmación compartido (Cancelar / acción destructiva),
+/// usado en "Eliminar cuenta" y "Cerrar sesión" -- mismo estilo visual,
+/// theme-aware (a diferencia de las pantallas de auth, que van siempre
+/// oscuras). Devuelve true si confirmó, false/null si canceló o cerró
+/// el diálogo tocando afuera.
+Future<bool?> showConfirmDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirmLabel,
+  Color? titleColor,
+  Color confirmColor = Colors.red,
+  IconData? icon,
+}) {
+  final colors = context.colors;
+  return showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => Dialog(
+      backgroundColor: colors.bottomSheetBackground,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, color: titleColor ?? colors.textPrimary, size: 20),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(color: titleColor ?? colors.textPrimary, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(message, style: TextStyle(color: colors.textSecondary, fontSize: 14, fontFamily: 'Inter')),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colors.textPrimary,
+                      side: BorderSide(color: colors.surfaceBorder),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: confirmColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(confirmLabel),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/shared_widgets.dart';
+import '../theme/app_theme.dart';
 import '../session.dart';
 
 // Mismo host que el resto de las pantallas.
@@ -94,8 +95,10 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF050508),
+      backgroundColor: colors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
@@ -107,22 +110,22 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.chevron_left, color: Colors.white.withValues(alpha: 0.60), size: 22),
-                    Text('Volver', style: TextStyle(color: Colors.white.withValues(alpha: 0.60), fontSize: 14, fontFamily: 'Inter')),
+                    Icon(Icons.chevron_left, color: colors.textSecondary, size: 22),
+                    Text('Volver', style: TextStyle(color: colors.textSecondary, fontSize: 14, fontFamily: 'Inter')),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'SEGURIDAD',
-                style: TextStyle(color: kAccentColor, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w900, letterSpacing: 4),
+                style: TextStyle(color: colors.accentText, fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.w900, letterSpacing: 4),
               ),
               const SizedBox(height: 6),
               Text.rich(
-                const TextSpan(
+                TextSpan(
                   children: [
-                    TextSpan(text: 'CAMBIAR ', style: TextStyle(color: Colors.white)),
-                    TextSpan(text: 'CONTRASEÑA', style: TextStyle(color: kAccentColor)),
+                    TextSpan(text: 'CAMBIAR ', style: TextStyle(color: colors.textPrimary)),
+                    TextSpan(text: 'CONTRASEÑA', style: TextStyle(color: colors.accentText)),
                   ],
                 ),
                 style: const TextStyle(fontSize: 32, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, height: 1.1),
@@ -130,7 +133,7 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
               const SizedBox(height: 8),
               Text(
                 'Ingresá tu contraseña actual y elegí una nueva.',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.38), fontSize: 13, fontFamily: 'Inter'),
+                style: TextStyle(color: colors.textMuted, fontSize: 13, fontFamily: 'Inter'),
               ),
               const SizedBox(height: 24),
 
@@ -138,12 +141,12 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
               TextField(
                 controller: _actualController,
                 obscureText: _obscureActual,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: colors.textPrimary),
                 decoration: buildInputDecoration(context, '', hasError: _errorActual != null).copyWith(
                   suffixIcon: IconButton(
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
-                    icon: Icon(_obscureActual ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.white38, size: 20),
+                    icon: Icon(_obscureActual ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: colors.textMuted, size: 20),
                     onPressed: () => setState(() => _obscureActual = !_obscureActual),
                   ),
                 ),
@@ -157,16 +160,16 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
               ],
 
               const SizedBox(height: 16),
-              FieldLabel('NUEVA CONTRASEÑA'),
+              const FieldLabel('NUEVA CONTRASEÑA'),
               TextField(
                 controller: _nuevaController,
                 obscureText: _obscureNueva,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: colors.textPrimary),
                 decoration: buildInputDecoration(context, '').copyWith(
                   suffixIcon: IconButton(
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
-                    icon: Icon(_obscureNueva ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.white38, size: 20),
+                    icon: Icon(_obscureNueva ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: colors.textMuted, size: 20),
                     onPressed: () => setState(() => _obscureNueva = !_obscureNueva),
                   ),
                 ),
@@ -180,7 +183,7 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                       height: 4,
                       margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
                       decoration: BoxDecoration(
-                        color: activo ? kAccentColor : Colors.white.withValues(alpha: 0.10),
+                        color: activo ? colors.accent : colors.surfaceBorder,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -191,24 +194,24 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
               if (_nuevaController.text.isNotEmpty)
                 Text(
                   _fuerza == 3 ? 'CONTRASEÑA FUERTE' : (_fuerza >= 1 ? 'CONTRASEÑA MEDIA' : 'CONTRASEÑA DÉBIL'),
-                  style: const TextStyle(color: kAccentColor, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1),
+                  style: TextStyle(color: colors.accentText, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1),
                 ),
               const SizedBox(height: 10),
-              _requisito('Al menos 8 caracteres', _tiene8),
-              _requisito('Una letra mayúscula', _tieneMayuscula),
-              _requisito('Un número', _tieneNumero),
+              _requisito(colors, 'Al menos 8 caracteres', _tiene8),
+              _requisito(colors, 'Una letra mayúscula', _tieneMayuscula),
+              _requisito(colors, 'Un número', _tieneNumero),
 
               const SizedBox(height: 16),
               const FieldLabel('REPETIR NUEVA CONTRASEÑA'),
               TextField(
                 controller: _repetirController,
                 obscureText: _obscureRepetir,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: colors.textPrimary),
                 decoration: buildInputDecoration(context, '', hasError: _repetirController.text.isNotEmpty && !_coinciden).copyWith(
                   suffixIcon: IconButton(
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
-                    icon: Icon(_obscureRepetir ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.white38, size: 20),
+                    icon: Icon(_obscureRepetir ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: colors.textMuted, size: 20),
                     onPressed: () => setState(() => _obscureRepetir = !_obscureRepetir),
                   ),
                 ),
@@ -221,10 +224,10 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                 child: ElevatedButton(
                   onPressed: (_formularioValido && !_loading) ? _guardarCambios : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccentColor,
+                    backgroundColor: colors.accent,
                     foregroundColor: Colors.black,
-                    disabledBackgroundColor: Colors.white.withValues(alpha: 0.10),
-                    disabledForegroundColor: Colors.white38,
+                    disabledBackgroundColor: colors.surface,
+                    disabledForegroundColor: colors.textMuted,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
@@ -240,8 +243,8 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white70,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                    foregroundColor: colors.textSecondary,
+                    side: BorderSide(color: colors.surfaceBorder),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text('Cancelar', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
@@ -254,14 +257,14 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
     );
   }
 
-  Widget _requisito(String texto, bool cumplido) {
+  Widget _requisito(AppColors colors, String texto, bool cumplido) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Icon(Icons.circle, size: 6, color: cumplido ? kAccentColor : Colors.white24),
+          Icon(Icons.circle, size: 6, color: cumplido ? colors.accentText : colors.textMuted),
           const SizedBox(width: 8),
-          Text(texto, style: TextStyle(color: cumplido ? kAccentColor : Colors.white.withValues(alpha: 0.40), fontSize: 12, fontFamily: 'Inter')),
+          Text(texto, style: TextStyle(color: cumplido ? colors.accentText : colors.textMuted, fontSize: 12, fontFamily: 'Inter')),
         ],
       ),
     );
