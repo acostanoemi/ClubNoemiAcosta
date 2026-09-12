@@ -107,6 +107,12 @@ class ReservaCreate(BaseModel):
     hora_inicio: time
     hora_fin: time
 
+class ReservaUpdate(BaseModel):
+    espacio_id: Optional[UUID] = None
+    fecha: Optional[date] = None
+    hora_inicio: Optional[time] = None
+    hora_fin: Optional[time] = None
+
 class ReservaResponse(BaseModel):
     id: UUID
     usuario_id: UUID
