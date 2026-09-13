@@ -274,8 +274,10 @@ const Map<String, String> _fotosPorId = {
 
   // Canchas
   '7cc9db12-1c8a-4415-afdd-8cdd26c5ee76': 'assets/images/canchas/castelar_voley_playa.png', // Castelar Vóley Playa
+  '22eba30a-d991-40d5-800b-78228ac99544': 'assets/images/canchas/castelar_voley_indoor.png', // Castelar Vóley Indoor Parquet
   '530c9230-86d3-4531-851f-3f8863f41489': 'assets/images/canchas/castelar_hockey.png', // Castelar Hockey H11
   'da451a98-80a4-472d-bd8a-419110e86fca': 'assets/images/canchas/castelar_tenis_cemento.png', // Castelar Tenis Cemento
+  'da1b9af1-dbf9-495e-8778-4c12a2b95876': 'assets/images/canchas/castelar_tenis_polvo.png', // Castelar Tenis Polvo de Ladrillo
   '7597aeb6-65fb-4f7f-b038-f76e0c68086e': 'assets/images/canchas/sanjusto_f5.png', // San Justo Fútbol F5 Cancha 1
 };
 
