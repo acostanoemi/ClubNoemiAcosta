@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../widgets/shared_widgets.dart';
 import '../models/sede.dart';
 import '../models/espacio.dart';
+import '../models/reserva.dart';
 import '../theme/app_theme.dart';
 import 'horarios_bottom_sheet.dart';
 
@@ -13,8 +14,13 @@ String _hhmm(String? hora) => (hora != null && hora.length >= 5) ? hora.substrin
 
 class SedeDetalleScreen extends StatefulWidget {
   final Sede sede;
+  // Si viene, esta pantalla actúa como "elegí la cancha nueva" dentro del
+  // flujo de Modificar Reserva: al elegir horario, en vez de crear una
+  // reserva nueva se modifica esta. Ver HorariosBottomSheet para el resto
+  // del flujo.
+  final Reserva? reservaAModificar;
 
-  const SedeDetalleScreen({super.key, required this.sede});
+  const SedeDetalleScreen({super.key, required this.sede, this.reservaAModificar});
 
   @override
   State<SedeDetalleScreen> createState() => _SedeDetalleScreenState();
@@ -27,6 +33,8 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
 
   String? _deporteSeleccionado;
   String _subcategoriaSeleccionada = 'Todos';
+
+  bool get _modificando => widget.reservaAModificar != null;
 
   @override
   void initState() {
@@ -47,7 +55,15 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
         setState(() {
           _espacios = espacios;
           if (espacios.isNotEmpty) {
-            _deporteSeleccionado = espacios.first.deporte;
+            // Si estamos modificando una reserva, arrancamos filtrados en el
+            // deporte de la cancha actual (más cómodo que arrancar en el
+            // primer deporte de la lista, que puede no tener nada que ver).
+            if (_modificando) {
+              final actual = espacios.where((e) => e.id == widget.reservaAModificar!.espacioId);
+              _deporteSeleccionado = actual.isNotEmpty ? actual.first.deporte : espacios.first.deporte;
+            } else {
+              _deporteSeleccionado = espacios.first.deporte;
+            }
           }
         });
       } else {
@@ -91,13 +107,18 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
     });
   }
 
-  void _abrirHorarios(Espacio espacio) {
-    showModalBottomSheet(
+  Future<void> _abrirHorarios(Espacio espacio) async {
+    final resultado = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => HorariosBottomSheet(sede: widget.sede, espacio: espacio),
+      builder: (_) => HorariosBottomSheet(sede: widget.sede, espacio: espacio, reservaAModificar: widget.reservaAModificar),
     );
+    // Si HorariosBottomSheet guardó los cambios (modo edición), avisamos
+    // hacia arriba en la pila para que el Detalle/Listado de reservas refresque.
+    if (resultado == true && mounted) {
+      Navigator.of(context).pop(true);
+    }
   }
 
   @override
@@ -134,6 +155,10 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  if (_modificando) ...[
+                    Text('MODIFICANDO RESERVA', style: TextStyle(color: colors.accent, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 2)),
+                    const SizedBox(height: 4),
+                  ],
                   if (_deporteSeleccionado != null)
                     Text(
                       _subcategoriaSeleccionada == 'Todos'
@@ -142,11 +167,6 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
                       style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 2),
                     ),
                   const SizedBox(height: 2),
-                  const Text(
-                    // El nombre de sede siempre queda blanco: el hero mantiene su
-                    // propio gradiente oscuro fijo en ambos modos (mismo criterio del Figma).
-                    '',
-                  ),
                   Text(
                     'SEDE ${widget.sede.nombre.toUpperCase()}',
                     style: const TextStyle(color: Colors.white, fontSize: 28, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900),
@@ -155,7 +175,7 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
               ),
             ),
 
-            // Contenido — antes hardcodeado a blanco, ahora sigue el tema
+            // Contenido — sigue el tema (a diferencia del hero, que queda fijo oscuro).
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -341,7 +361,10 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
                                                     child: ElevatedButton.icon(
                                                       onPressed: () => _abrirHorarios(e),
                                                       icon: const Icon(Icons.bolt, size: 18, color: Colors.black),
-                                                      label: const Text('VER HORARIOS / RESERVAR', style: TextStyle(color: Colors.black, fontSize: 13, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, letterSpacing: 0.8)),
+                                                      label: Text(
+                                                        _modificando ? 'ELEGIR ESTA CANCHA' : 'VER HORARIOS / RESERVAR',
+                                                        style: const TextStyle(color: Colors.black, fontSize: 13, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, letterSpacing: 0.8),
+                                                      ),
                                                       style: ElevatedButton.styleFrom(
                                                         backgroundColor: colors.accent,
                                                         elevation: 0,
@@ -376,7 +399,7 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
           children: [
             _navItem(colors, Icons.home_outlined, 'INICIO', false, () => Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false)),
             _navItem(colors, Icons.apartment, 'SEDES', true, () => Navigator.pop(context)),
-            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () {}),
+            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => Navigator.pushNamedAndRemoveUntil(context, '/reservas', (r) => false)),
             _navItem(colors, Icons.person_outline, 'PERFIL', false, () => Navigator.pushNamed(context, '/perfil')),
           ],
         ),
@@ -385,19 +408,19 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
   }
 
   Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
-  final color = active ? colors.accent : colors.textMuted;
-  return GestureDetector(
-    onTap: onTap,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 22),
-        const SizedBox(height: 2),
-        Text(label, style: TextStyle(color: color, fontSize: 9, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
-      ],
-    ),
-  );
-}
+    final color = active ? colors.accentText : colors.textMuted;
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(color: color, fontSize: 9, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
 
   Widget _tagChip(AppColors colors, String texto) {
     return Container(

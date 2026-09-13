@@ -15,8 +15,12 @@ const _diasSemanaCortos = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
 class HorariosBottomSheet extends StatefulWidget {
   final Sede sede;
   final Espacio espacio;
+  // Si viene una reserva acá, el sheet arranca en modo edición: precarga
+  // fecha/horario, el botón hace PATCH en vez de crear una reserva nueva,
+  // y al guardar devuelve `true` (pop) para que quien lo abrió sepa refrescar.
+  final Reserva? reservaAModificar;
 
-  const HorariosBottomSheet({super.key, required this.sede, required this.espacio});
+  const HorariosBottomSheet({super.key, required this.sede, required this.espacio, this.reservaAModificar});
 
   @override
   State<HorariosBottomSheet> createState() => _HorariosBottomSheetState();
@@ -30,30 +34,69 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
 
   List<Reserva> _reservasDelDia = [];
   bool _cargandoReservas = true;
+  bool _guardandoCambios = false;
+  String? _errorGuardado;
+
+  bool get _editando => widget.reservaAModificar != null;
 
   @override
   void initState() {
     super.initState();
     final hoy = DateTime.now();
-    _proximosDias = List.generate(7, (i) => DateTime(hoy.year, hoy.month, hoy.day + i));
-    _fechaSeleccionada = _proximosDias.first;
-    _cargarReservas();
+    final reserva = widget.reservaAModificar;
+
+    // En modo edición, la fecha de la reserva puede caer más allá de los
+    // próximos 7 días por defecto -- extendemos el rango para incluirla.
+    int diasAGenerar = 7;
+    if (reserva != null) {
+      final diff = reserva.fecha.difference(DateTime(hoy.year, hoy.month, hoy.day)).inDays;
+      if (diff >= diasAGenerar) diasAGenerar = diff + 1;
+    }
+    _proximosDias = List.generate(diasAGenerar, (i) => DateTime(hoy.year, hoy.month, hoy.day + i));
+
+    if (reserva != null) {
+      _fechaSeleccionada = reserva.fecha;
+      final horaInicioInt = int.tryParse(reserva.horaInicio.split(':')[0]);
+      final horaFinInt = int.tryParse(reserva.horaFin.split(':')[0]);
+      if (horaInicioInt != null && horaFinInt != null) {
+        final duracionOriginal = horaFinInt - horaInicioInt;
+        // Este selector solo ofrece 1 o 2 horas. Si la reserva original dura
+        // más, no la preseleccionamos -- mejor que el usuario elija de nuevo
+        // a que le cambiemos la duración sin avisar.
+        if (duracionOriginal == 1 || duracionOriginal == 2) {
+          _duracionHoras = duracionOriginal;
+          _horaSeleccionada = horaInicioInt;
+        }
+      }
+    } else {
+      _fechaSeleccionada = _proximosDias.first;
+    }
+
+    // Si ya precargamos una hora (modo edición), que la primera carga de
+    // reservas no la borre de nuevo.
+    _cargarReservas(resetearHora: !_editando || _horaSeleccionada == null);
   }
 
   int get _horaAperturaInt => int.tryParse((widget.espacio.horaApertura ?? '08:00').split(':')[0]) ?? 8;
   int get _horaCierreInt => int.tryParse((widget.espacio.horaCierre ?? '23:00').split(':')[0]) ?? 23;
 
-  Future<void> _cargarReservas() async {
+  Future<void> _cargarReservas({bool resetearHora = true}) async {
     setState(() {
       _cargandoReservas = true;
-      _horaSeleccionada = null;
+      if (resetearHora) _horaSeleccionada = null;
     });
     try {
       final fechaStr = _fechaSeleccionada.toIso8601String().split('T').first;
       final response = await http.get(Uri.parse('$_apiBaseUrl/reservas?espacio_id=${widget.espacio.id}&fecha=$fechaStr'));
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
-        setState(() => _reservasDelDia = data.map((r) => Reserva.fromJson(r)).toList());
+        var reservas = data.map((r) => Reserva.fromJson(r)).toList();
+        // En modo edición, la reserva que se está modificando no cuenta
+        // como "ocupada" contra sí misma.
+        if (widget.reservaAModificar != null) {
+          reservas = reservas.where((r) => r.id != widget.reservaAModificar!.id).toList();
+        }
+        setState(() => _reservasDelDia = reservas);
       }
     } catch (e) {
       // Si falla, mostramos todos los horarios como disponibles antes que romper la pantalla.
@@ -87,19 +130,63 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
 
   double get _total => widget.espacio.precioPorHora * _duracionHoras;
 
-  void _confirmar() {
+  Future<void> _confirmar() async {
     if (_horaSeleccionada == null) return;
-    Navigator.of(context).pop();
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ConfirmarReservaScreen(
-        sede: widget.sede,
-        espacio: widget.espacio,
-        fecha: _fechaSeleccionada,
-        horaInicio: _horaSeleccionada!,
-        duracionHoras: _duracionHoras,
-        total: _total,
-      ),
-    ));
+
+    if (!_editando) {
+      Navigator.of(context).pop();
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ConfirmarReservaScreen(
+          sede: widget.sede,
+          espacio: widget.espacio,
+          fecha: _fechaSeleccionada,
+          horaInicio: _horaSeleccionada!,
+          duracionHoras: _duracionHoras,
+          total: _total,
+        ),
+      ));
+      return;
+    }
+
+    // Modo edición: PATCH directo a la reserva existente, sin pasar por
+    // ConfirmarReservaScreen (esa pantalla es solo para reservas nuevas).
+    setState(() {
+      _guardandoCambios = true;
+      _errorGuardado = null;
+    });
+
+    final horaFin = _horaSeleccionada! + _duracionHoras;
+
+    try {
+      final response = await http.patch(
+        Uri.parse('$_apiBaseUrl/reservas/${widget.reservaAModificar!.id}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'espacio_id': widget.espacio.id,
+          'fecha': _fechaSeleccionada.toIso8601String().split('T').first,
+          'hora_inicio': '${_horaSeleccionada!.toString().padLeft(2, '0')}:00:00',
+          'hora_fin': '${horaFin.toString().padLeft(2, '0')}:00:00',
+        }),
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        Navigator.of(context).pop(); // cierra el bottom sheet
+        Navigator.of(context).pop(true); // avisa éxito a quien lo abrió
+      } else {
+        String detail = 'No pudimos modificar la reserva';
+        try {
+          final data = jsonDecode(response.body);
+          detail = data['detail'] ?? detail;
+        } catch (_) {}
+        setState(() => _errorGuardado = detail);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _errorGuardado = 'Sin conexión con el servidor');
+    } finally {
+      if (mounted) setState(() => _guardandoCambios = false);
+    }
   }
 
   @override
@@ -130,6 +217,10 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (_editando) ...[
+                        Text('MODIFICANDO RESERVA', style: TextStyle(color: colors.accentText, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                        const SizedBox(height: 12),
+                      ],
                       Text('FECHA', style: TextStyle(color: colors.textSecondary, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700, letterSpacing: 1.2)),
                       const SizedBox(height: 10),
                       SizedBox(
@@ -264,22 +355,28 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                           ],
                         ),
                       ),
+                      if (_errorGuardado != null) ...[
+                        const SizedBox(height: 12),
+                        Text(_errorGuardado!, style: TextStyle(color: Colors.red[300], fontSize: 13, fontFamily: 'Inter')),
+                      ],
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: _horaSeleccionada != null ? _confirmar : null,
+                          onPressed: (_horaSeleccionada != null && !_guardandoCambios) ? _confirmar : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: colors.accent,
                             disabledBackgroundColor: colors.surface,
                             elevation: 0,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
-                          child: Text(
-                            _horaSeleccionada != null ? 'CONFIRMAR RESERVA' : 'SELECCIONÁ UN HORARIO',
-                            style: TextStyle(color: _horaSeleccionada != null ? Colors.black : colors.textMuted, fontSize: 15, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, letterSpacing: 1),
-                          ),
+                          child: _guardandoCambios
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                              : Text(
+                                  _horaSeleccionada == null ? 'SELECCIONÁ UN HORARIO' : (_editando ? 'GUARDAR CAMBIOS' : 'CONFIRMAR RESERVA'),
+                                  style: TextStyle(color: _horaSeleccionada != null ? Colors.black : colors.textMuted, fontSize: 15, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, letterSpacing: 1),
+                                ),
                         ),
                       ),
                     ],

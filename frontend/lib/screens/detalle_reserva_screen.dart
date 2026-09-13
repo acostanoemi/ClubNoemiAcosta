@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'mis_reservas_screen.dart';
 import 'cancelar_reserva_screen.dart';
+import 'sede_detalle_screen.dart';
 
 const _diasLargos = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 const _mesesLargos = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -118,6 +119,34 @@ class DetalleReservaScreen extends StatelessWidget {
               ),
               if (item.esActiva) ...[
                 const SizedBox(height: 24),
+                if (item.sede != null) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        final modificada = await Navigator.of(context).push<bool>(MaterialPageRoute(
+                          builder: (_) => SedeDetalleScreen(sede: item.sede!, reservaAModificar: item.reserva),
+                        ));
+                        if (modificada == true && context.mounted) Navigator.pop(context, true);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colors.accentText,
+                        side: BorderSide(color: colors.accent.withValues(alpha: 0.5)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.edit_calendar_outlined, size: 18, color: colors.accentText),
+                          const SizedBox(width: 8),
+                          Text('Modificar reserva', style: TextStyle(color: colors.accentText, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 SizedBox(
                   width: double.infinity,
                   height: 52,
