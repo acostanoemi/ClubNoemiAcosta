@@ -260,3 +260,27 @@ Future<bool?> showConfirmDialog(
     ),
   );
 }
+
+/// Fotos reales por sede/cancha, cargadas de a poco (frontend/assets/images/canchas/).
+/// Identificadas por ID (no por nombre) -- los IDs de sede/espacio no cambian
+/// nunca, aunque se le edite el nombre a la cancha después. Si un ID todavía
+/// no tiene foto propia, se usa `fotoGenerica`.
+const String fotoGenerica = 'assets/images/cancha_hero.png';
+
+const Map<String, String> _fotosPorId = {
+  // Sedes
+  '8db98ffe-f15a-414f-b202-c23408e3dce1': 'assets/images/canchas/castelar.png', // Sede Castelar
+  '378b6dec-bc98-4664-8ef2-ed6952a14d7d': 'assets/images/canchas/moron.png', // Sede Morón
+
+  // Canchas
+  '7cc9db12-1c8a-4415-afdd-8cdd26c5ee76': 'assets/images/canchas/castelar_voley_playa.png', // Castelar Vóley Playa
+  '530c9230-86d3-4531-851f-3f8863f41489': 'assets/images/canchas/castelar_hockey.png', // Castelar Hockey H11
+  'da451a98-80a4-472d-bd8a-419110e86fca': 'assets/images/canchas/castelar_tenis_cemento.png', // Castelar Tenis Cemento
+  '7597aeb6-65fb-4f7f-b038-f76e0c68086e': 'assets/images/canchas/sanjusto_f5.png', // San Justo Fútbol F5 Cancha 1
+};
+
+/// Foto de una sede (para tarjetas de Sedes y el hero de SedeDetalle). Recibe el ID.
+String fotoParaSede(String sedeId) => _fotosPorId[sedeId] ?? fotoGenerica;
+
+/// Foto de una cancha puntual (para las tarjetas dentro de SedeDetalle). Recibe el ID.
+String fotoParaCancha(String espacioId) => _fotosPorId[espacioId] ?? fotoGenerica;

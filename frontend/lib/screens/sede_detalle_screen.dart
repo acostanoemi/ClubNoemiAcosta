@@ -130,17 +130,15 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Hero
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF141C0A), Color(0xFF050508)],
-                ),
-              ),
+            // Hero — foto real de la sede si existe, si no cae en la genérica.
+            // Queda siempre oscuro (foto + overlay), igual en los dos temas.
+            Stack(
+              children: [
+                Image.asset(fotoParaSede(widget.sede.id), fit: BoxFit.cover, width: double.infinity, height: 165),
+                Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.55))),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -173,6 +171,8 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
                   ),
                 ],
               ),
+                ),
+              ],
             ),
 
             // Contenido — sigue el tema (a diferencia del hero, que queda fijo oscuro).
@@ -293,6 +293,12 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
                                               color: colors.surfaceBorder,
                                               child: Stack(
                                                 children: [
+                                                  Positioned.fill(
+                                                    child: Image.asset(fotoParaCancha(e.id), fit: BoxFit.cover),
+                                                  ),
+                                                  Positioned.fill(
+                                                    child: Container(color: Colors.black.withValues(alpha: 0.20)),
+                                                  ),
                                                   Positioned(
                                                     top: 10,
                                                     left: 10,

@@ -163,7 +163,7 @@ class _SedesScreenState extends State<SedesScreen> {
                               width: double.infinity,
                               child: Stack(
                                 children: [
-                                  Image.asset('assets/images/cancha_hero.png', fit: BoxFit.cover, width: double.infinity, height: 150),
+                                  Image.asset(fotoParaSede(s.id), fit: BoxFit.cover, width: double.infinity, height: 150),
                                   Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.50))),
                                   Padding(
                                     padding: const EdgeInsets.all(14),
