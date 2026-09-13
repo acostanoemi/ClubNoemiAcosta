@@ -279,6 +279,9 @@ const Map<String, String> _fotosPorId = {
   'da451a98-80a4-472d-bd8a-419110e86fca': 'assets/images/canchas/castelar_tenis_cemento.png', // Castelar Tenis Cemento
   'da1b9af1-dbf9-495e-8778-4c12a2b95876': 'assets/images/canchas/castelar_tenis_polvo.png', // Castelar Tenis Polvo de Ladrillo
   '7597aeb6-65fb-4f7f-b038-f76e0c68086e': 'assets/images/canchas/sanjusto_f5.png', // San Justo Fútbol F5 Cancha 1
+  'b60609a4-f2ef-41f2-87a2-4dd9c9944dc4': 'assets/images/canchas/sanjusto_golf.png', // San Justo Golf Driving Range
+  '2b50a486-4872-496b-a74d-ef313220df56': 'assets/images/canchas/sanjusto_golf.png', // San Justo Golf 9 Hoyos (misma foto)
+  '28eb3938-ad0e-4fa8-92fb-c62950951672': 'assets/images/canchas/sanjusto_tenis.png', // San Justo Tenis Sintético
 };
 
 /// Foto de una sede (para tarjetas de Sedes y el hero de SedeDetalle). Recibe el ID.
