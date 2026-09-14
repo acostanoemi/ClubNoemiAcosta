@@ -584,7 +584,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 height: double.infinity,
                 child: Align(
-                  alignment: const Alignment(0.95, -0.72),
+                  alignment: const Alignment(0.7, -0.72),
                   child: GestureDetector(
                     onTap: () {},
                     child: TweenAnimationBuilder<double>(
