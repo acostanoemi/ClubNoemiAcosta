@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'widgets/shared_widgets.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'session.dart';
+import 'notifications.dart';
 import 'screens/mi_perfil_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/sedes_screen.dart';
@@ -14,7 +17,24 @@ import 'theme/app_theme.dart';
 import 'theme/theme_controller.dart';
 import 'theme/theme_scope.dart';
 
-void main() {
+/// Clave para mostrar SnackBars (ej. notificaciones push) desde
+/// cualquier parte de la app, sin depender de un BuildContext local.
+final GlobalKey<ScaffoldMessengerState> messengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
+const FirebaseOptions _firebaseOptionsWeb = FirebaseOptions(
+  apiKey: "AIzaSyAUZiVgzLoJg-K4UxZJH2j1m6MSOL90RIA",
+  authDomain: "clubnoemiacosta.firebaseapp.com",
+  projectId: "clubnoemiacosta",
+  storageBucket: "clubnoemiacosta.firebasestorage.app",
+  messagingSenderId: "1062598928107",
+  appId: "1:1062598928107:web:f319bd94f379bbddaf00ae",
+  measurementId: "G-DMKRMFJ19P",
+);
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: _firebaseOptionsWeb);
   runApp(const ClubApp());
 }
 
@@ -29,9 +49,84 @@ class ClubApp extends StatefulWidget {
 
 class _ClubAppState extends State<ClubApp> {
   final _themeController = ThemeController();
+  bool _cargandoSesion = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _escucharNotificaciones();
+    Session.restore().then((_) async {
+      if (Session.estaLogueado) {
+        await Notifications.registrarToken(apiBaseUrl);
+      }
+      if (mounted) setState(() => _cargandoSesion = false);
+    });
+  }
+
+  /// Muestra un SnackBar cuando llega una notificación push mientras
+  /// la app está abierta (notificaciones en primer plano).
+    void _escucharNotificaciones() {
+    FirebaseMessaging.onMessage.listen((message) {
+      // ignore: avoid_print
+      print('🔔🔔🔔 MENSAJE FCM RECIBIDO: ${message.notification?.title}');
+      final notif = message.notification;
+      if (notif == null) return;
+                messengerKey.currentState?.showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color(0xFF1A1A1A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Color(0xFFD4FF00), width: 1),
+          ),
+          content: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.notifications, color: Color(0xFFD4FF00), size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notif.title ?? '',
+                      style: const TextStyle(
+                        color: Color(0xFFD4FF00),
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      notif.body ?? '',
+                      style: const TextStyle(color: Colors.white, fontFamily: 'Inter', fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_cargandoSesion) {
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
     return ThemeScope(
       controller: _themeController,
       child: AnimatedBuilder(
@@ -39,10 +134,11 @@ class _ClubAppState extends State<ClubApp> {
         builder: (context, _) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
+            scaffoldMessengerKey: messengerKey,
             themeMode: _themeController.mode,
             theme: buildLightTheme(),
             darkTheme: buildDarkTheme(),
-            initialRoute: '/login',
+            initialRoute: Session.estaLogueado ? '/home' : '/login',
             routes: {
               '/login': (context) => const LoginScreen(),
               '/register': (context) => const RegisterScreen(),
@@ -140,6 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
           nombre: data['nombre'],
           apellido: data['apellido'],
         );
+        await Notifications.registrarToken(apiBaseUrl);
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
       } else {

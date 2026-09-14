@@ -7,6 +7,13 @@ from datetime import datetime, time, timedelta, date
 
 import models, schemas, database
 
+import firebase_admin
+from firebase_admin import credentials, messaging
+
+if not firebase_admin._apps:
+    cred = credentials.Certificate("firebase-credentials.json")
+    firebase_admin.initialize_app(cred)
+
 app = FastAPI(title="API Club Noemí Acosta", version="1.0.0")
 
 # Permitir peticiones desde el Frontend en Flutter
@@ -150,6 +157,15 @@ def dar_de_baja_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
     usuario.activo = False
     db.commit()
     return {"message": "Cuenta dada de baja"}
+
+@app.post("/usuarios/{usuario_id}/fcm-token")
+def registrar_fcm_token(usuario_id: UUID, datos: schemas.FcmTokenUpdate, db: Session = Depends(get_db)):
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    usuario.fcm_token = datos.fcm_token
+    db.commit()
+    return {"message": "Token registrado"}
 
 # --- SEDES ---
 
@@ -301,6 +317,58 @@ def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, db: Sessio
     db.refresh(reserva)
     return reserva
 
+@app.patch("/reservas/{reserva_id}", response_model=schemas.ReservaResponse)
+def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, db: Session = Depends(get_db)):
+    reserva = db.query(models.Reserva).filter(models.Reserva.id == reserva_id).first()
+    if not reserva:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    if reserva.estado == "cancelada":
+        raise HTTPException(status_code=400, detail="No se puede modificar una reserva cancelada")
+
+    nuevo_espacio_id = datos.espacio_id if datos.espacio_id is not None else reserva.espacio_id
+    nueva_fecha = datos.fecha if datos.fecha is not None else reserva.fecha
+    nueva_hora_inicio = datos.hora_inicio if datos.hora_inicio is not None else reserva.hora_inicio
+    nueva_hora_fin = datos.hora_fin if datos.hora_fin is not None else reserva.hora_fin
+
+    if nueva_hora_inicio.minute != 0 or nueva_hora_fin.minute != 0:
+        raise HTTPException(status_code=400, detail="Las reservas deben hacerse en horarios en punto (minuto 00)")
+
+    duracion = (datetime.combine(datetime.min, nueva_hora_fin) - datetime.combine(datetime.min, nueva_hora_inicio)).total_seconds() / 3600
+    if duracion < 1:
+        raise HTTPException(status_code=400, detail="La reserva debe durar como minimo 1 hora")
+
+    espacio_nuevo = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == nuevo_espacio_id).first()
+    if not espacio_nuevo:
+        raise HTTPException(status_code=404, detail="El espacio deportivo especificado no existe")
+
+    # Si cambia de cancha, solo se permite dentro de la misma sede.
+    if datos.espacio_id is not None:
+        espacio_actual = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
+        if espacio_actual and espacio_nuevo.sede_id != espacio_actual.sede_id:
+            raise HTTPException(status_code=400, detail="Solo se puede cambiar a otra cancha de la misma sede")
+
+    solapada = db.query(models.Reserva).filter(
+        models.Reserva.id != reserva_id,
+        models.Reserva.espacio_id == nuevo_espacio_id,
+        models.Reserva.fecha == nueva_fecha,
+        models.Reserva.estado == "confirmada",
+        models.Reserva.hora_inicio < nueva_hora_fin,
+        models.Reserva.hora_fin > nueva_hora_inicio
+    ).first()
+
+    if solapada:
+        raise HTTPException(status_code=409, detail="El espacio deportivo no esta disponible en ese horario")
+
+    reserva.espacio_id = nuevo_espacio_id
+    reserva.fecha = nueva_fecha
+    reserva.hora_inicio = nueva_hora_inicio
+    reserva.hora_fin = nueva_hora_fin
+    reserva.monto_total = espacio_nuevo.precio_por_hora * duracion
+
+    db.commit()
+    db.refresh(reserva)
+    return reserva
+
 @app.delete("/reservas/{reserva_id}")
 def cancelar_reserva(reserva_id: UUID, db: Session = Depends(get_db)):
     reserva = db.query(models.Reserva).filter(models.Reserva.id == reserva_id).first()
@@ -309,6 +377,29 @@ def cancelar_reserva(reserva_id: UUID, db: Session = Depends(get_db)):
 
     reserva.estado = "cancelada"
     db.commit()
+
+    # Notificar al usuario por push, si tiene un token FCM registrado.
+    # Si el envio falla (token vencido, sin conexion con Firebase, etc.)
+    # no debe romper la cancelacion en si -- solo se loguea el error.
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == reserva.usuario_id).first()
+    if usuario and usuario.fcm_token:
+        espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
+        sede = db.query(models.Sede).filter(models.Sede.id == espacio.sede_id).first() if espacio else None
+        deporte = espacio.deporte if espacio else "tu cancha"
+        nombre_sede = sede.nombre if sede else ""
+        cuerpo = f"Se canceló tu reserva de {deporte} en {nombre_sede}." if nombre_sede else f"Se canceló tu reserva de {deporte}."
+        try:
+            mensaje = messaging.Message(
+                notification=messaging.Notification(
+                    title="Reserva cancelada",
+                    body=cuerpo,
+                ),
+                token=usuario.fcm_token,
+            )
+            messaging.send(mensaje)
+        except Exception as e:
+            print(f"No se pudo enviar la notificacion push: {e}")
+
     return {"message": "Reserva cancelada exitosamente"}
 
 @app.delete("/espacios/{espacio_id}")

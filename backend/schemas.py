@@ -26,6 +26,9 @@ class UsuarioUpdate(BaseModel):
     dni: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
 
+class FcmTokenUpdate(BaseModel):
+    fcm_token: str
+
 class UsuarioResponse(BaseModel):
     id: UUID
     nombre: str

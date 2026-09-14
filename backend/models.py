@@ -15,6 +15,7 @@ class Usuario(Base):
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     activo = Column(Boolean, default=True)
+    fcm_token = Column(String, nullable=True)
 
     reservas = relationship("Reserva", back_populates="usuario")
 

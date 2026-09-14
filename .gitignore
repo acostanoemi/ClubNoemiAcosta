@@ -15,3 +15,7 @@ backend/venv/
 .build/
 build/
 node_modules
+
+backend/firebase-credentials.json
+
+backend/respaldo_universidad.sql

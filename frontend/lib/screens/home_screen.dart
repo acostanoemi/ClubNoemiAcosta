@@ -6,6 +6,8 @@ import '../models/sede.dart';
 import '../models/espacio.dart';
 import '../models/reserva.dart';
 import '../session.dart';
+import 'mis_reservas_screen.dart';
+import 'detalle_reserva_screen.dart';
 import '../widgets/profile_dropdown.dart';
 import '../widgets/notifications_dropdown.dart';
 import 'consultar_canchas_screen.dart';
@@ -312,7 +314,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         final dias = reserva.fecha.difference(DateTime.now()).inDays;
                         final enCuantos = dias <= 0 ? 'hoy' : (dias == 1 ? 'mañana' : 'en $dias días');
 
-                        return Container(
+                        return GestureDetector(
+                          onTap: () async {
+                            final cancelada = await Navigator.of(context).push<bool>(MaterialPageRoute(
+                              builder: (_) => DetalleReservaScreen(
+                                item: ReservaConDetalle(reserva: reserva, espacio: espacio, sede: sede),
+                              ),
+                            ));
+                            if (cancelada == true) _cargarDatos();
+                          },
+                          child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -370,6 +381,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
+                        ),
                         );
                       }),
                       const SizedBox(height: 16),

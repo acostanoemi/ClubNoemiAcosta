@@ -1,11 +1,100 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import '../session.dart';
 
-class ProfileDropdown extends StatelessWidget {
+const String _apiBaseUrl = "http://localhost:8000";
+
+class ProfileDropdown extends StatefulWidget {
   final VoidCallback onClose;
 
   const ProfileDropdown({super.key, required this.onClose});
+
+  @override
+  State<ProfileDropdown> createState() => _ProfileDropdownState();
+}
+
+class _ProfileDropdownState extends State<ProfileDropdown> {
+  String? _dni;
+  String? _fechaNacimiento;
+  bool _cargando = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarDatos();
+  }
+
+  Future<void> _cargarDatos() async {
+    if (Session.id == null) {
+      setState(() => _cargando = false);
+      return;
+    }
+    try {
+      final response = await http.get(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'));
+      if (!mounted) return;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _dni = data['dni']?.toString();
+          _fechaNacimiento = data['fecha_nacimiento']?.toString();
+          _cargando = false;
+        });
+      } else {
+        setState(() => _cargando = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _cargando = false);
+    }
+  }
+
+  Future<void> _confirmarCerrarSesion(BuildContext context) async {
+    final colors = context.colors;
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: colors.bottomSheetBackground,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: colors.surfaceBorder),
+          ),
+          title: Text(
+            '¿Cerrar sesión?',
+            style: TextStyle(color: colors.textPrimary, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800, fontSize: 20),
+          ),
+          content: Text(
+            'Vas a tener que volver a iniciar sesión para acceder a tu cuenta.',
+            style: TextStyle(color: colors.textSecondary, fontFamily: 'Inter', fontSize: 13),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text('Volver', style: TextStyle(color: colors.textSecondary, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+              ),
+              child: const Text('Cerrar sesión', style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar == true && context.mounted) {
+      widget.onClose();
+      Session.clear();
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,25 +142,22 @@ class ProfileDropdown extends StatelessWidget {
             const SizedBox(height: 12),
             Divider(color: colors.surfaceBorder),
             const SizedBox(height: 8),
-            // DNI y fecha de nacimiento: mock, el login no los devuelve.
             _fila(colors, 'Email', email),
-            _fila(colors, 'DNI', '31.234.567'),
-            _fila(colors, 'Nac.', '1990-05-15'),
+            _fila(colors, 'DNI', _cargando ? '—' : (_dni ?? '—')),
+            _fila(colors, 'Nac.', _cargando ? '—' : (_fechaNacimiento ?? '—')),
             const SizedBox(height: 8),
             Divider(color: colors.surfaceBorder),
             const SizedBox(height: 4),
             _accion(context, colors, Icons.person_outline, 'Perfil completo', () {
-              onClose();
+              widget.onClose();
               Navigator.pushNamed(context, '/perfil');
             }),
             _accion(context, colors, Icons.calendar_today_outlined, 'Mis reservas', () {
-              onClose();
+              widget.onClose();
               Navigator.pushNamed(context, '/reservas');
             }),
             _accion(context, colors, Icons.logout, 'Cerrar sesión', () {
-              onClose();
-              Session.clear();
-              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+              _confirmarCerrarSesion(context);
             }, color: Colors.redAccent),
           ],
         ),
