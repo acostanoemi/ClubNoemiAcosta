@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from datetime import date, time
+from datetime import date, time, datetime
 from uuid import UUID
 from typing import Optional
 
@@ -131,3 +131,15 @@ class ReservaResponse(BaseModel):
 class SedeUpdate(BaseModel):
     nombre: Optional[str] = None
 
+
+# --- NOTIFICACIONES ---
+class NotificacionResponse(BaseModel):
+    id: UUID
+    usuario_id: UUID
+    titulo: str
+    cuerpo: str
+    leida: bool
+    creada_en: datetime
+
+    class Config:
+        from_attributes = True

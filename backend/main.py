@@ -50,6 +50,7 @@ def revisar_recordatorios_24hs():
                         messaging.send(mensaje)
                     except Exception as e:
                         print(f"No se pudo enviar el recordatorio: {e}")
+                    crear_notificacion(db, usuario.id, "Recordatorio de reserva", cuerpo)
                 reserva.notificado_24hs = True
                 db.commit()
     finally:
@@ -58,6 +59,12 @@ def revisar_recordatorios_24hs():
 scheduler = BackgroundScheduler()
 scheduler.add_job(revisar_recordatorios_24hs, "interval", hours=1)
 scheduler.start()
+
+def crear_notificacion(db: Session, usuario_id, titulo: str, cuerpo: str):
+    """Guarda una notificacion en el historial persistente del usuario."""
+    notif = models.Notificacion(usuario_id=usuario_id, titulo=titulo, cuerpo=cuerpo)
+    db.add(notif)
+    db.commit()
 
 app = FastAPI(title="API Club Noemí Acosta", version="1.0.0")
 
@@ -211,6 +218,21 @@ def registrar_fcm_token(usuario_id: UUID, datos: schemas.FcmTokenUpdate, db: Ses
     usuario.fcm_token = datos.fcm_token
     db.commit()
     return {"message": "Token registrado"}
+
+@app.get("/usuarios/{usuario_id}/notificaciones", response_model=List[schemas.NotificacionResponse])
+def obtener_notificaciones(usuario_id: UUID, db: Session = Depends(get_db)):
+    return db.query(models.Notificacion).filter(
+        models.Notificacion.usuario_id == usuario_id
+    ).order_by(models.Notificacion.creada_en.desc()).all()
+
+@app.patch("/notificaciones/{notificacion_id}")
+def marcar_notificacion_leida(notificacion_id: UUID, db: Session = Depends(get_db)):
+    notif = db.query(models.Notificacion).filter(models.Notificacion.id == notificacion_id).first()
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notificación no encontrada")
+    notif.leida = True
+    db.commit()
+    return {"message": "Notificación marcada como leída"}
 
 # --- SEDES ---
 
@@ -399,6 +421,7 @@ def cancelar_reserva(reserva_id: UUID, forzada: bool = False, db: Session = Depe
             messaging.send(mensaje)
         except Exception as e:
             print(f"No se pudo enviar la notificacion push: {e}")
+        crear_notificacion(db, usuario.id, titulo, cuerpo)
 
     return {"message": "Reserva cancelada exitosamente"}
 

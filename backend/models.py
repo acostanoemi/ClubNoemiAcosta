@@ -1,5 +1,6 @@
+from datetime import datetime
 import uuid
-from sqlalchemy import Column, String, Boolean, Float, Date, Time, ForeignKey
+from sqlalchemy import Column, String, Boolean, Float, Date, Time, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from database import Base
@@ -48,6 +49,16 @@ class EspacioDeportivo(Base):
 
     sede = relationship("Sede", back_populates="espacios")
     reservas = relationship("Reserva", back_populates="espacio")
+
+class Notificacion(Base):
+    __tablename__ = "notificaciones"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False)
+    titulo = Column(String, nullable=False)
+    cuerpo = Column(String, nullable=False)
+    leida = Column(Boolean, default=False)
+    creada_en = Column(DateTime, default=datetime.utcnow)
 
 class Reserva(Base):
     __tablename__ = "reservas"
