@@ -53,10 +53,13 @@ class ReservaConDetalle {
   ReservaConDetalle({required this.reserva, this.espacio, this.sede});
 
   bool get esActiva {
+    if (reserva.estado == 'cancelada') return false;
     final hoy = DateTime.now();
     final hoySinHora = DateTime(hoy.year, hoy.month, hoy.day);
     return !reserva.fecha.isBefore(hoySinHora);
   }
+
+  bool get estaCancelada => reserva.estado == 'cancelada';
 }
 
 class MisReservasScreen extends StatefulWidget {
@@ -84,7 +87,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
       _error = null;
     });
     try {
-      final resReservas = await http.get(Uri.parse('$_apiBaseUrl/reservas?usuario_id=${Session.id}'));
+      final resReservas = await http.get(Uri.parse('$_apiBaseUrl/reservas?usuario_id=${Session.id}&incluir_canceladas=true'));
       final resEspacios = await http.get(Uri.parse('$_apiBaseUrl/espacios'));
       final resSedes = await http.get(Uri.parse('$_apiBaseUrl/sedes'));
 
@@ -313,13 +316,18 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: (item.esActiva ? colors.accent : Colors.green).withValues(alpha: 0.16),
+                              color: (item.estaCancelada
+                                      ? Colors.red
+                                      : (item.esActiva ? colors.accent : Colors.green))
+                                  .withValues(alpha: 0.16),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              item.esActiva ? 'Activa' : 'Completada',
+                              item.estaCancelada ? 'Cancelada' : (item.esActiva ? 'Activa' : 'Completada'),
                               style: TextStyle(
-                                color: item.esActiva ? colors.accentText : Colors.green[400],
+                                color: item.estaCancelada
+                                    ? Colors.red[300]
+                                    : (item.esActiva ? colors.accentText : Colors.green[400]),
                                 fontSize: 11,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w800,

@@ -55,17 +55,36 @@ class DetalleReservaScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: (item.esActiva ? colors.accent : Colors.green).withValues(alpha: 0.16),
+                  color: (item.estaCancelada
+                          ? Colors.red
+                          : (item.esActiva ? colors.accent : Colors.green))
+                      .withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(width: 6, height: 6, decoration: BoxDecoration(color: item.esActiva ? colors.accent : Colors.green[400], shape: BoxShape.circle)),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: item.estaCancelada
+                            ? Colors.red[400]
+                            : (item.esActiva ? colors.accent : Colors.green[400]),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                     const SizedBox(width: 6),
                     Text(
-                      item.esActiva ? 'Activa' : 'Completada',
-                      style: TextStyle(color: item.esActiva ? colors.accentText : Colors.green[400], fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w800),
+                      item.estaCancelada ? 'Cancelada' : (item.esActiva ? 'Activa' : 'Completada'),
+                      style: TextStyle(
+                        color: item.estaCancelada
+                            ? Colors.red[300]
+                            : (item.esActiva ? colors.accentText : Colors.green[400]),
+                        fontSize: 12,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),

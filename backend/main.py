@@ -295,7 +295,7 @@ def crear_espacio(espacio: schemas.EspacioCreate, db: Session = Depends(get_db))
 # --- RESERVAS ---
 
 @app.get("/reservas", response_model=List[schemas.ReservaResponse])
-def obtener_reservas(usuario_id: Optional[UUID] = None, espacio_id: Optional[UUID] = None, fecha: Optional[date] = None, db: Session = Depends(get_db)):
+def obtener_reservas(usuario_id: Optional[UUID] = None, espacio_id: Optional[UUID] = None, fecha: Optional[date] = None, incluir_canceladas: bool = False, db: Session = Depends(get_db)):
     query = db.query(models.Reserva)
     if usuario_id:
         query = query.filter(models.Reserva.usuario_id == usuario_id)
@@ -303,7 +303,8 @@ def obtener_reservas(usuario_id: Optional[UUID] = None, espacio_id: Optional[UUI
         query = query.filter(models.Reserva.espacio_id == espacio_id)
     if fecha:
         query = query.filter(models.Reserva.fecha == fecha)
-    query = query.filter(models.Reserva.estado != "cancelada")
+    if not incluir_canceladas:
+        query = query.filter(models.Reserva.estado != "cancelada")
     return query.all()
 
 @app.post("/reservas", response_model=schemas.ReservaResponse, status_code=status.HTTP_201_CREATED)
