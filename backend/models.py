@@ -60,6 +60,7 @@ class Reserva(Base):
     hora_fin = Column(Time, nullable=False)
     monto_total = Column(Float, nullable=False)
     estado = Column(String, default="confirmada")  # confirmada / cancelada
+    notificado_24hs = Column(Boolean, default=False)
 
     usuario = relationship("Usuario", back_populates="reservas")
     espacio = relationship("EspacioDeportivo", back_populates="reservas")

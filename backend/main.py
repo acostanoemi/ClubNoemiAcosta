@@ -14,6 +14,51 @@ if not firebase_admin._apps:
     cred = credentials.Certificate("firebase-credentials.json")
     firebase_admin.initialize_app(cred)
 
+from apscheduler.schedulers.background import BackgroundScheduler
+
+def revisar_recordatorios_24hs():
+    """Busca reservas confirmadas que arrancan dentro de las proximas 24hs
+    y que todavia no fueron notificadas, y les manda un push recordatorio."""
+    db = database.SessionLocal()
+    try:
+        ahora = datetime.now()
+        limite = ahora + timedelta(hours=24)
+        reservas = db.query(models.Reserva).filter(
+            models.Reserva.estado == "confirmada",
+            models.Reserva.notificado_24hs == False
+        ).all()
+        for reserva in reservas:
+            momento_reserva = datetime.combine(reserva.fecha, reserva.hora_inicio)
+            if ahora <= momento_reserva <= limite:
+                usuario = db.query(models.Usuario).filter(models.Usuario.id == reserva.usuario_id).first()
+                if usuario and usuario.fcm_token:
+                    espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
+                    sede = db.query(models.Sede).filter(models.Sede.id == espacio.sede_id).first() if espacio else None
+                    deporte = espacio.deporte if espacio else "tu cancha"
+                    nombre_sede = sede.nombre if sede else ""
+                    lugar = f" en {nombre_sede}" if nombre_sede else ""
+                    hora = reserva.hora_inicio.strftime("%H:%M")
+                    cuerpo = f"Tenés una reserva de {deporte}{lugar} mañana a las {hora}."
+                    try:
+                        mensaje = messaging.Message(
+                            notification=messaging.Notification(
+                                title="Recordatorio de reserva",
+                                body=cuerpo,
+                            ),
+                            token=usuario.fcm_token,
+                        )
+                        messaging.send(mensaje)
+                    except Exception as e:
+                        print(f"No se pudo enviar el recordatorio: {e}")
+                reserva.notificado_24hs = True
+                db.commit()
+    finally:
+        db.close()
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(revisar_recordatorios_24hs, "interval", hours=1)
+scheduler.start()
+
 app = FastAPI(title="API Club Noemí Acosta", version="1.0.0")
 
 # Permitir peticiones desde el Frontend en Flutter
@@ -370,7 +415,7 @@ def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, db: Sessio
     return reserva
 
 @app.delete("/reservas/{reserva_id}")
-def cancelar_reserva(reserva_id: UUID, db: Session = Depends(get_db)):
+def cancelar_reserva(reserva_id: UUID, forzada: bool = False, db: Session = Depends(get_db)):
     reserva = db.query(models.Reserva).filter(models.Reserva.id == reserva_id).first()
     if not reserva:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
@@ -381,17 +426,24 @@ def cancelar_reserva(reserva_id: UUID, db: Session = Depends(get_db)):
     # Notificar al usuario por push, si tiene un token FCM registrado.
     # Si el envio falla (token vencido, sin conexion con Firebase, etc.)
     # no debe romper la cancelacion en si -- solo se loguea el error.
+    # 'forzada' distingue si cancelo el propio usuario o la administracion.
     usuario = db.query(models.Usuario).filter(models.Usuario.id == reserva.usuario_id).first()
     if usuario and usuario.fcm_token:
         espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
         sede = db.query(models.Sede).filter(models.Sede.id == espacio.sede_id).first() if espacio else None
         deporte = espacio.deporte if espacio else "tu cancha"
         nombre_sede = sede.nombre if sede else ""
-        cuerpo = f"Se canceló tu reserva de {deporte} en {nombre_sede}." if nombre_sede else f"Se canceló tu reserva de {deporte}."
+        lugar = f" en {nombre_sede}" if nombre_sede else ""
+        if forzada:
+            titulo = "Reserva cancelada por administración"
+            cuerpo = f"Tu reserva de {deporte}{lugar} fue cancelada por la administración."
+        else:
+            titulo = "Reserva cancelada"
+            cuerpo = f"Se canceló tu reserva de {deporte}{lugar}."
         try:
             mensaje = messaging.Message(
                 notification=messaging.Notification(
-                    title="Reserva cancelada",
+                    title=titulo,
                     body=cuerpo,
                 ),
                 token=usuario.fcm_token,
