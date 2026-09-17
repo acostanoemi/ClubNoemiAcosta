@@ -85,6 +85,19 @@ def get_db():
     finally:
         db.close()
 
+import bcrypt
+
+def hash_password(password: str) -> str:
+    password_bytes = password.encode("utf-8")[:72]
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
+
+def verify_password(password_plano: str, password_hash: str) -> bool:
+    try:
+        password_bytes = password_plano.encode("utf-8")[:72]
+        return bcrypt.checkpw(password_bytes, password_hash.encode("utf-8"))
+    except Exception:
+        return False
+
 # --- AUTENTICACIÓN ---
 
 @app.post("/auth/register", response_model=schemas.UsuarioResponse, status_code=status.HTTP_201_CREATED)
@@ -108,13 +121,15 @@ def registrar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_
         cuenta_inactiva.dni = usuario.dni
         cuenta_inactiva.fecha_nacimiento = usuario.fecha_nacimiento
         cuenta_inactiva.email = usuario.email
-        cuenta_inactiva.password = usuario.password
+        cuenta_inactiva.password = hash_password(usuario.password)
         cuenta_inactiva.activo = True
         db.commit()
         db.refresh(cuenta_inactiva)
         return cuenta_inactiva
 
-    nuevo_usuario = models.Usuario(**usuario.model_dump())
+    datos_usuario = usuario.model_dump()
+    datos_usuario["password"] = hash_password(datos_usuario["password"])
+    nuevo_usuario = models.Usuario(**datos_usuario)
     db.add(nuevo_usuario)
     db.commit()
     db.refresh(nuevo_usuario)
@@ -135,7 +150,7 @@ def login(credenciales: schemas.UsuarioLogin, db: Session = Depends(get_db)):
     if not user.activo:
         raise HTTPException(status_code=403, detail="Esta cuenta fue dada de baja")
 
-    if user.password.strip() != pass_clean:
+    if not verify_password(pass_clean, user.password):
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
     
     return {
@@ -152,7 +167,7 @@ def recover_password(data: schemas.RecoverPassword, db: Session = Depends(get_db
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
-    user.password = data.new_password
+    user.password = hash_password(data.new_password)
     db.commit()
     return {"message": "Contraseña actualizada exitosamente"}
 
@@ -162,10 +177,10 @@ def change_password(data: schemas.ChangePassword, db: Session = Depends(get_db))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    if user.password.strip() != data.current_password.strip():
+    if not verify_password(data.current_password.strip(), user.password):
         raise HTTPException(status_code=401, detail="La contraseña actual no es correcta")
 
-    user.password = data.new_password
+    user.password = hash_password(data.new_password)
     db.commit()
     return {"message": "Contraseña actualizada exitosamente"}
 
