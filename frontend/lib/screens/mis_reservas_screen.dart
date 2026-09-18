@@ -399,6 +399,16 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 2),
           Text(label, style: TextStyle(color: color, fontSize: 9, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: active ? 24 : 0,
+            height: 3,
+            decoration: BoxDecoration(
+              color: colors.accentText,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
         ],
       ),
     );

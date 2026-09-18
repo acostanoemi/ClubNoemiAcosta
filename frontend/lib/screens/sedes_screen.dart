@@ -179,44 +179,47 @@ class _SedesScreenState extends State<SedesScreen> {
                                 children: [
                                   Image.asset(fotoParaSede(s.id), fit: BoxFit.cover, width: double.infinity, height: 150),
                                   Positioned.fill(child: Container(color: Colors.black.withValues(alpha: 0.50))),
-                                  Padding(
-                                    padding: const EdgeInsets.all(14),
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                            decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(10)),
+                                  Positioned(
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Expanded(
                                             child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Text('$cantCanchas', style: const TextStyle(color: Color(0xFFD4FF00), fontSize: 16, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
-                                                Text('canchas', style: TextStyle(color: Colors.white.withValues(alpha: 0.60), fontSize: 9, fontFamily: 'Inter')),
+                                                Text('SEDE ${s.nombre.toUpperCase()}', style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
+                                                const SizedBox(height: 2),
+                                                Row(
+                                                  children: [
+                                                    Icon(Icons.location_on_outlined, size: 13, color: Colors.white.withValues(alpha: 0.55)),
+                                                    const SizedBox(width: 4),
+                                                    Expanded(child: Text(s.direccion, style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 12, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                                  ],
+                                                ),
                                               ],
                                             ),
                                           ),
-                                        ),
-                                        Positioned(
-                                          left: 0,
-                                          right: 0,
-                                          bottom: 0,
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text('SEDE ${s.nombre.toUpperCase()}', style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
-                                              const SizedBox(height: 2),
-                                              Row(
-                                                children: [
-                                                  Icon(Icons.location_on_outlined, size: 13, color: Colors.white.withValues(alpha: 0.55)),
-                                                  const SizedBox(width: 4),
-                                                  Text(s.direccion, style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 12, fontFamily: 'Inter')),
-                                                ],
-                                              ),
-                                            ],
+                                          const SizedBox(width: 10),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                            decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.58), borderRadius: BorderRadius.circular(10)),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text('$cantCanchas', style: TextStyle(color: colors.accentText, fontSize: 18, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, height: 1)),
+                                                Text('canchas', style: TextStyle(color: Colors.white.withValues(alpha: 0.40), fontSize: 9, fontFamily: 'Inter')),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -300,6 +303,16 @@ class _SedesScreenState extends State<SedesScreen> {
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 2),
           Text(label, style: TextStyle(color: color, fontSize: 9, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: active ? 24 : 0,
+            height: 3,
+            decoration: BoxDecoration(
+              color: colors.accentText,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
         ],
       ),
     );
