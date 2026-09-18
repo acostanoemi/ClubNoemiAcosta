@@ -282,6 +282,13 @@ const Map<String, String> _fotosPorId = {
   'b60609a4-f2ef-41f2-87a2-4dd9c9944dc4': 'assets/images/canchas/sanjusto_golf.png', // San Justo Golf Driving Range
   '2b50a486-4872-496b-a74d-ef313220df56': 'assets/images/canchas/sanjusto_golf.png', // San Justo Golf 9 Hoyos (misma foto)
   '28eb3938-ad0e-4fa8-92fb-c62950951672': 'assets/images/canchas/sanjusto_tenis.png', // San Justo Tenis Sintético
+
+  // Reusadas de Castelar (misma subcategoria/deporte, foto real pendiente)
+  'af12bc3f-952d-4adf-824b-9a69ee56b735': 'assets/images/canchas/castelar_tenis_polvo.png', // Morón Tenis Polvo Cancha 1
+  'a058eb59-689b-429e-a5dd-dc5781d70b95': 'assets/images/canchas/castelar_tenis_polvo.png', // Morón Tenis Polvo Cancha 2
+  'ebc97c56-eb9d-44eb-9ac9-3cc92eb1788a': 'assets/images/canchas/castelar_tenis_cemento.png', // Morón Tenis Cemento Cancha 1
+  'bfe09c02-0953-4231-b8ab-273ca03a23b1': 'assets/images/canchas/castelar_hockey.png', // Ramos Mejía Hockey H7
+  'b594bdbc-c65b-4490-bd10-1b2d6f95e982': 'assets/images/canchas/castelar_voley_indoor.png', // Ramos Mejía Vóley Indoor
 };
 
 /// Foto de una sede (para tarjetas de Sedes y el hero de SedeDetalle). Recibe el ID.
