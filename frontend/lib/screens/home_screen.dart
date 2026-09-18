@@ -312,7 +312,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         }
                         final espacio = _espacioPorId(reserva.espacioId);
                         final sede = espacio == null ? null : _sedePorId(espacio.sedeId);
-                        final dias = reserva.fecha.difference(DateTime.now()).inDays;
+                        final hoy = DateTime.now();
+                        final hoySinHora = DateTime(hoy.year, hoy.month, hoy.day);
+                        final fechaSinHora = DateTime(reserva.fecha.year, reserva.fecha.month, reserva.fecha.day);
+                        final dias = fechaSinHora.difference(hoySinHora).inDays;
                         final enCuantos = dias <= 0 ? 'hoy' : (dias == 1 ? 'mañana' : 'en $dias días');
 
                         return GestureDetector(
