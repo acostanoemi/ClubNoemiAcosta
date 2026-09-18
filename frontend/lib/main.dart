@@ -55,7 +55,10 @@ class _ClubAppState extends State<ClubApp> {
   void initState() {
     super.initState();
     _escucharNotificaciones();
-    Session.restore().then((_) async {
+    Future.wait([
+      Session.restore(),
+      _themeController.restore(),
+    ]).then((_) async {
       if (Session.estaLogueado) {
         await Notifications.registrarToken(apiBaseUrl);
       }
