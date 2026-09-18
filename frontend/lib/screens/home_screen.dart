@@ -83,6 +83,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _cargarDatos();
+    _verificarNotificacionesSinLeer();
+  }
+
+  Future<void> _verificarNotificacionesSinLeer() async {
+    if (Session.id == null) return;
+    try {
+      final res = await http.get(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}/notificaciones'));
+      if (res.statusCode == 200) {
+        final List notifs = jsonDecode(res.body);
+        final hayNoLeidas = notifs.any((n) => n['leida'] == false);
+        if (mounted) setState(() => _tieneNotificacionesSinLeer = hayNoLeidas);
+      }
+    } catch (_) {
+      // Silencioso: el punto de notificacion es un detalle visual, no
+      // debe interrumpir la carga del resto del Home si esto falla.
+    }
   }
 
   Future<void> _cargarDatos() async {
@@ -160,6 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   bool _mostrarNotificaciones = false;
+  bool _tieneNotificacionesSinLeer = false;
   bool _mostrarPerfilMenu = false;
 
   @override
@@ -248,7 +265,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 40,
                                 margin: const EdgeInsets.only(right: 10),
                                 decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white24)),
-                                child: const Icon(Icons.notifications_none, color: Colors.white70, size: 20),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    const Center(child: Icon(Icons.notifications_none, color: Colors.white70, size: 20)),
+                                    if (_tieneNotificacionesSinLeer)
+                                      Positioned(
+                                        top: 7,
+                                        right: 7,
+                                        child: Container(
+                                          width: 7,
+                                          height: 7,
+                                          decoration: BoxDecoration(
+                                            color: kAccentColor,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: Colors.black.withValues(alpha: 0.4), width: 1.5),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
                             GestureDetector(
@@ -590,7 +626,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         opacity: ((value - 0.92) / 0.08).clamp(0.0, 1.0),
                         child: Transform.scale(scale: value, alignment: Alignment.topRight, child: child),
                       ),
-                      child: NotificationsDropdown(onClose: () => setState(() => _mostrarNotificaciones = false)),
+                      child: NotificationsDropdown(onClose: () {
+                        setState(() => _mostrarNotificaciones = false);
+                        _verificarNotificacionesSinLeer();
+                      }),
                     ),
                   ),
                 ),
