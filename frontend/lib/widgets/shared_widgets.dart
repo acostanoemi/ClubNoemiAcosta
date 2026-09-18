@@ -357,3 +357,36 @@ void irATab(BuildContext context, {required String actual, required String desti
   final direccion = (iDestino > iActual) ? 1 : -1;
   Navigator.of(context).pushNamedAndRemoveUntil(destino, (route) => false, arguments: direccion);
 }
+
+/// Selector de fecha unificado para toda la app -- mismo tema oscuro
+/// con acento lima en los 3 lugares que lo usan (editar perfil, registro,
+/// buscar disponibilidad), y un poco mas chico que el tamaño default de
+/// Material, que en desktop/web se ve grande.
+Future<DateTime?> mostrarSelectorFecha(
+  BuildContext context, {
+  required DateTime initialDate,
+  required DateTime firstDate,
+  required DateTime lastDate,
+}) {
+  return showDatePicker(
+    context: context,
+    initialDate: initialDate,
+    firstDate: firstDate,
+    lastDate: lastDate,
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.dark(
+            primary: kAccentColor,
+            onPrimary: Colors.black,
+            surface: const Color(0xFF141418),
+          ),
+        ),
+        child: Transform.scale(
+          scale: 0.9,
+          child: child,
+        ),
+      );
+    },
+  );
+}

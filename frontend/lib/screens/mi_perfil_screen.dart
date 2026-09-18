@@ -105,8 +105,8 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
   }
 
   Future<void> _elegirFechaNacimiento() async {
-    final elegida = await showDatePicker(
-      context: context,
+    final elegida = await mostrarSelectorFecha(
+      context,
       initialDate: _fechaEditando ?? DateTime(1995, 1, 1),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),

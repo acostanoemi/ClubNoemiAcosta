@@ -44,23 +44,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _pickBirthDate() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
+    final picked = await mostrarSelectorFecha(
+      context,
       initialDate: DateTime(now.year - 25),
       firstDate: DateTime(1900),
       lastDate: now,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: kAccentColor,
-              onPrimary: Colors.black,
-              surface: const Color(0xFF141418),
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
     if (picked != null) {
       setState(() {
