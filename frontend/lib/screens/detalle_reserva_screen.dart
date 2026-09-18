@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../widgets/shared_widgets.dart';
 import 'mis_reservas_screen.dart';
 import 'cancelar_reserva_screen.dart';
 import 'sede_detalle_screen.dart';
@@ -98,11 +99,21 @@ class DetalleReservaScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(color: colors.accent.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(12)),
-                          child: Icon(iconoDeporte(deporte), color: colors.accent, size: 26),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: item.espacio != null
+                              ? Image.asset(
+                                  fotoParaCancha(item.espacio!.id),
+                                  width: 56,
+                                  height: 56,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(color: colors.accent.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(12)),
+                                  child: Icon(iconoDeporte(deporte), color: colors.accent, size: 26),
+                                ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(

@@ -297,11 +297,21 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(color: colors.accent.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(12)),
-                  child: Icon(iconoDeporte(deporte), color: colors.accent, size: 26),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: item.espacio != null
+                      ? Image.asset(
+                          fotoParaCancha(item.espacio!.id),
+                          width: 56,
+                          height: 56,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(color: colors.accent.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(12)),
+                          child: Icon(iconoDeporte(deporte), color: colors.accent, size: 26),
+                        ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
