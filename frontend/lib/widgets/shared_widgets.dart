@@ -278,7 +278,7 @@ const Map<String, String> _fotosPorId = {
   '530c9230-86d3-4531-851f-3f8863f41489': 'assets/images/canchas/castelar_hockey.png', // Castelar Hockey H11
   'da451a98-80a4-472d-bd8a-419110e86fca': 'assets/images/canchas/castelar_tenis_cemento.png', // Castelar Tenis Cemento
   'da1b9af1-dbf9-495e-8778-4c12a2b95876': 'assets/images/canchas/castelar_tenis_polvo.png', // Castelar Tenis Polvo de Ladrillo
-  '7597aeb6-65fb-4f7f-b038-f76e0c68086e': 'assets/images/canchas/sanjusto_f5.png', // San Justo Fútbol F5 Cancha 1
+  '7597aeb6-65fb-4f7f-b038-f76e0c68086e': 'assets/images/canchas/futbol_f5.png', // San Justo Fútbol F5 Cancha 1
   'b60609a4-f2ef-41f2-87a2-4dd9c9944dc4': 'assets/images/canchas/sanjusto_golf.png', // San Justo Golf Driving Range
   '2b50a486-4872-496b-a74d-ef313220df56': 'assets/images/canchas/sanjusto_golf.png', // San Justo Golf 9 Hoyos (misma foto)
   '28eb3938-ad0e-4fa8-92fb-c62950951672': 'assets/images/canchas/sanjusto_tenis.png', // San Justo Tenis Sintético
@@ -289,6 +289,16 @@ const Map<String, String> _fotosPorId = {
   'ebc97c56-eb9d-44eb-9ac9-3cc92eb1788a': 'assets/images/canchas/castelar_tenis_cemento.png', // Morón Tenis Cemento Cancha 1
   'bfe09c02-0953-4231-b8ab-273ca03a23b1': 'assets/images/canchas/castelar_hockey.png', // Ramos Mejía Hockey H7
   'b594bdbc-c65b-4490-bd10-1b2d6f95e982': 'assets/images/canchas/castelar_voley_indoor.png', // Ramos Mejía Vóley Indoor
+
+  // Fotos reales de Fútbol 5 y Fútbol 11 (mismo par de fotos para todas
+  // las canchas de esa subcategoria, sin importar la sede).
+  '55be2bbf-26fe-429e-a6b3-11cf70de9df3': 'assets/images/canchas/futbol_f5.png', // Morón Fútbol F5 Cancha 1
+  '2da25c26-7a1b-4a2c-9c25-1f5695c00105': 'assets/images/canchas/futbol_f5.png', // Morón Fútbol F5 Cancha 2
+  '21f1a8a2-8ca0-4f1d-8a71-1263523177af': 'assets/images/canchas/futbol_f7.png', // Morón Fútbol F7
+  '791a327e-a0e5-4de0-9bf0-9c5ef3b49aa4': 'assets/images/canchas/futbol_f11.png', // Morón Fútbol F11
+  '421034f4-811c-4517-8577-8546135c0306': 'assets/images/canchas/futbol_f8.png', // San Justo Fútbol F8
+  '4902cc11-6599-4df9-9ff1-7943ff2084c3': 'assets/images/canchas/futbol_f5.png', // Ramos Mejía Fútbol F5
+  '9296f4f7-c3d3-4c0f-8694-f118a8dbcd6c': 'assets/images/canchas/futbol_f11.png', // Ramos Mejía Fútbol F11
 };
 
 /// Foto de una sede (para tarjetas de Sedes y el hero de SedeDetalle). Recibe el ID.
