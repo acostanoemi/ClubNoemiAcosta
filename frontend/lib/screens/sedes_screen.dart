@@ -213,7 +213,7 @@ class _SedesScreenState extends State<SedesScreen> {
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Text('$cantCanchas', style: TextStyle(color: colors.accentText, fontSize: 18, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, height: 1)),
+                                                Text('$cantCanchas', style: const TextStyle(color: kAccentColor, fontSize: 18, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900, height: 1)),
                                                 Text('canchas', style: TextStyle(color: Colors.white.withValues(alpha: 0.40), fontSize: 9, fontFamily: 'Inter')),
                                               ],
                                             ),

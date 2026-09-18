@@ -308,16 +308,6 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
                                                       child: Text(e.subcategoria ?? e.deporte, style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
                                                     ),
                                                   ),
-                                                  // Espacio reservado para el ícono/imagen de la pelota del deporte — vacío por ahora.
-                                                  Positioned(
-                                                    top: 10,
-                                                    right: 10,
-                                                    child: Container(
-                                                      width: 32,
-                                                      height: 32,
-                                                      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.35), shape: BoxShape.circle),
-                                                    ),
-                                                  ),
                                                   Positioned(
                                                     left: 10,
                                                     bottom: 8,

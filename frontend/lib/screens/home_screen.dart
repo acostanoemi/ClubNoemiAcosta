@@ -11,6 +11,7 @@ import 'detalle_reserva_screen.dart';
 import '../widgets/profile_dropdown.dart';
 import '../widgets/notifications_dropdown.dart';
 import 'consultar_canchas_screen.dart';
+import 'sede_detalle_screen.dart';
 import '../theme/app_theme.dart';
 
 const String _apiBaseUrl = "http://localhost:8000";
@@ -537,7 +538,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemBuilder: (context, i) {
                         final s = _sedesFiltradas[i];
                         final deportes = _deportesDeSede(s.id);
-                        return Container(
+                        return GestureDetector(
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => SedeDetalleScreen(sede: s),
+                          )),
+                          child: Container(
                           width: 220,
                           clipBehavior: Clip.antiAlias,
                           decoration: BoxDecoration(
@@ -596,6 +601,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
+                        ),
                         );
                       },
                     ),
