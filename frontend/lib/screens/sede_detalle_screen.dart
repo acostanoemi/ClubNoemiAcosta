@@ -415,7 +415,8 @@ class _SedeDetalleScreenState extends State<SedeDetalleScreen> {
 
   Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
     final color = active ? colors.accentText : colors.textMuted;
-    return GestureDetector(
+    return TapScale(
+      scale: 0.82,
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,

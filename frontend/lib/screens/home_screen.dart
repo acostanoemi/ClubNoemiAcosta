@@ -631,9 +631,9 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             _navItem(colors, Icons.home, 'INICIO', true, () {}),
-            _navItem(colors, Icons.apartment_outlined, 'SEDES', false, () => Navigator.pushNamed(context, '/sedes')),
-            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => Navigator.pushNamed(context, '/reservas')),
-            _navItem(colors, Icons.person_outline, 'PERFIL', false, () => Navigator.pushNamed(context, '/perfil')),
+            _navItem(colors, Icons.apartment_outlined, 'SEDES', false, () => irATab(context, actual: '/home', destino: '/sedes')),
+            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => irATab(context, actual: '/home', destino: '/reservas')),
+            _navItem(colors, Icons.person_outline, 'PERFIL', false, () => irATab(context, actual: '/home', destino: '/perfil')),
           ],
         ),
       ),
@@ -642,7 +642,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
     final color = active ? colors.accentText : colors.textMuted;
-    return GestureDetector(
+    return TapScale(
+      scale: 0.82,
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,

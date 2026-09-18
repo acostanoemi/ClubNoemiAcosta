@@ -538,9 +538,9 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _navItem(colors, Icons.home_outlined, 'INICIO', false, () => Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false)),
-            _navItem(colors, Icons.apartment_outlined, 'SEDES', false, () => Navigator.pushNamedAndRemoveUntil(context, '/sedes', (r) => false)),
-            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => Navigator.pushNamedAndRemoveUntil(context, '/reservas', (r) => false)),
+            _navItem(colors, Icons.home_outlined, 'INICIO', false, () => irATab(context, actual: '/perfil', destino: '/home')),
+            _navItem(colors, Icons.apartment_outlined, 'SEDES', false, () => irATab(context, actual: '/perfil', destino: '/sedes')),
+            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => irATab(context, actual: '/perfil', destino: '/reservas')),
             _navItem(colors, Icons.person, 'PERFIL', true, () {}),
           ],
         ),
@@ -597,7 +597,8 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
 
   Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
     final color = active ? colors.accentText : colors.textMuted;
-    return GestureDetector(
+    return TapScale(
+      scale: 0.82,
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,

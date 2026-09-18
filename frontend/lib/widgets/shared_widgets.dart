@@ -296,3 +296,54 @@ String fotoParaSede(String sedeId) => _fotosPorId[sedeId] ?? fotoGenerica;
 
 /// Foto de una cancha puntual (para las tarjetas dentro de SedeDetalle). Recibe el ID.
 String fotoParaCancha(String espacioId) => _fotosPorId[espacioId] ?? fotoGenerica;
+
+/// Envuelve cualquier widget tocable y lo achica levemente al presionar
+/// (imita el "whileTap" de Framer Motion del diseño original). [scale]
+/// es el factor final al presionar -- ej. 0.91 para chips, 0.82 para el
+/// bottom nav. [onTap] se dispara al soltar el dedo, como un GestureDetector normal.
+class TapScale extends StatefulWidget {
+  final Widget child;
+  final double scale;
+  final VoidCallback? onTap;
+
+  const TapScale({super.key, required this.child, this.scale = 0.95, this.onTap});
+
+  @override
+  State<TapScale> createState() => _TapScaleState();
+}
+
+class _TapScaleState extends State<TapScale> {
+  bool _presionado = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _presionado = true),
+      onTapUp: (_) => setState(() => _presionado = false),
+      onTapCancel: () => setState(() => _presionado = false),
+      child: AnimatedScale(
+        scale: _presionado ? widget.scale : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+/// Orden visual de las pestanas del bottom nav -- usado para calcular
+/// la direccion de la transicion entre pantallas (ver irATab).
+const List<String> ordenTabs = ['/home', '/sedes', '/reservas', '/perfil'];
+
+/// Navega entre pestanas del bottom nav, siempre reemplazando toda la
+/// pila (nunca apila pantallas), con la direccion de animacion correcta
+/// segun el orden de ordenTabs -- hacia adelante desliza desde la derecha,
+/// hacia atras desde la izquierda.
+void irATab(BuildContext context, {required String actual, required String destino}) {
+  if (actual == destino) return;
+  final iActual = ordenTabs.indexOf(actual);
+  final iDestino = ordenTabs.indexOf(destino);
+  final direccion = (iDestino > iActual) ? 1 : -1;
+  Navigator.of(context).pushNamedAndRemoveUntil(destino, (route) => false, arguments: direccion);
+}

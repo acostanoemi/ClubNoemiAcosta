@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../theme/app_theme.dart';
+import '../widgets/shared_widgets.dart';
 import '../models/reserva.dart';
 import '../models/espacio.dart';
 import '../models/sede.dart';
@@ -247,10 +248,10 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _navItem(colors, Icons.home_outlined, 'INICIO', false, () => Navigator.pushNamedAndRemoveUntil(context, '/home', (r) => false)),
-            _navItem(colors, Icons.apartment_outlined, 'SEDES', false, () => Navigator.pushNamed(context, '/sedes')),
+            _navItem(colors, Icons.home_outlined, 'INICIO', false, () => irATab(context, actual: '/reservas', destino: '/home')),
+            _navItem(colors, Icons.apartment_outlined, 'SEDES', false, () => irATab(context, actual: '/reservas', destino: '/sedes')),
             _navItem(colors, Icons.calendar_today, 'RESERVAS', true, () {}),
-            _navItem(colors, Icons.person_outline, 'PERFIL', false, () => Navigator.pushNamed(context, '/perfil')),
+            _navItem(colors, Icons.person_outline, 'PERFIL', false, () => irATab(context, actual: '/reservas', destino: '/perfil')),
           ],
         ),
       ),
@@ -391,7 +392,8 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
 
   Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
     final color = active ? colors.accentText : colors.textMuted;
-    return GestureDetector(
+    return TapScale(
+      scale: 0.82,
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,

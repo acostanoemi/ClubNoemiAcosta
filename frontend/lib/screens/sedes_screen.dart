@@ -283,10 +283,10 @@ class _SedesScreenState extends State<SedesScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _navItem(colors, Icons.home_outlined, 'INICIO', false, () => Navigator.pushReplacementNamed(context, '/home')),
+            _navItem(colors, Icons.home_outlined, 'INICIO', false, () => irATab(context, actual: '/sedes', destino: '/home')),
             _navItem(colors, Icons.apartment, 'SEDES', true, () {}),
-            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => Navigator.pushNamed(context, '/reservas')),
-            _navItem(colors, Icons.person_outline, 'PERFIL', false, () => Navigator.pushNamed(context, '/perfil')),
+            _navItem(colors, Icons.calendar_today_outlined, 'RESERVAS', false, () => irATab(context, actual: '/sedes', destino: '/reservas')),
+            _navItem(colors, Icons.person_outline, 'PERFIL', false, () => irATab(context, actual: '/sedes', destino: '/perfil')),
           ],
         ),
       ),
@@ -295,7 +295,8 @@ class _SedesScreenState extends State<SedesScreen> {
 
   Widget _navItem(AppColors colors, IconData icon, String label, bool active, VoidCallback onTap) {
     final color = active ? colors.accentText : colors.textMuted;
-    return GestureDetector(
+    return TapScale(
+      scale: 0.82,
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,

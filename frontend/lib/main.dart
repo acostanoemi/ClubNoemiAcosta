@@ -139,15 +139,7 @@ class _ClubAppState extends State<ClubApp> {
             theme: buildLightTheme(),
             darkTheme: buildDarkTheme(),
             initialRoute: Session.estaLogueado ? '/home' : '/login',
-            routes: {
-              '/login': (context) => const LoginScreen(),
-              '/register': (context) => const RegisterScreen(),
-              '/forgot': (context) => const ForgotPasswordScreen(),
-              '/perfil': (context) => const MiPerfilScreen(),
-              '/home': (context) => const HomeScreen(),
-              '/sedes': (context) => const SedesScreen(),
-              '/reservas': (context) => const MisReservasScreen(),
-            },
+            onGenerateRoute: _generarRuta,
             builder: (context, child) {
               const designWidth = 412.0;
               const designHeight = 892.0;
@@ -428,4 +420,49 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+}
+
+/// Mapa de las pantallas por nombre de ruta -- reemplaza al `routes:`
+/// fijo de MaterialApp para poder inyectar una transicion con direccion
+/// (arguments: 1 o -1, ver `irATab` en shared_widgets.dart).
+final Map<String, WidgetBuilder> _rutasDisponibles = {
+  '/login': (context) => const LoginScreen(),
+  '/register': (context) => const RegisterScreen(),
+  '/forgot': (context) => const ForgotPasswordScreen(),
+  '/perfil': (context) => const MiPerfilScreen(),
+  '/home': (context) => const HomeScreen(),
+  '/sedes': (context) => const SedesScreen(),
+  '/reservas': (context) => const MisReservasScreen(),
+};
+
+Route<dynamic>? _generarRuta(RouteSettings settings) {
+  final builder = _rutasDisponibles[settings.name];
+  if (builder == null) return null;
+
+  // direccion: 1 si vamos "hacia adelante" en el orden de tabs, -1 si
+  // vamos "hacia atras" (ver ordenTabs/irATab). Default 1 para navegacion
+  // que no pasa por el bottom nav (login, registro, etc.).
+  final direccion = settings.arguments is int ? settings.arguments as int : 1;
+
+  return PageRouteBuilder(
+    settings: settings,
+    transitionDuration: const Duration(milliseconds: 260),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
+    pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final desplazamiento = Tween<double>(begin: 48.0 * direccion, end: 0.0)
+          .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+      return AnimatedBuilder(
+        animation: animation,
+        child: child,
+        builder: (context, child) => Opacity(
+          opacity: animation.value,
+          child: Transform.translate(
+            offset: Offset(desplazamiento.value, 0),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }
