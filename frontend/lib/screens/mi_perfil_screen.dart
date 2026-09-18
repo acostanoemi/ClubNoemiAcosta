@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -19,6 +20,12 @@ class MiPerfilScreen extends StatefulWidget {
 
 class _MiPerfilScreenState extends State<MiPerfilScreen> {
   bool _mostrarBannerActualizada = false;
+
+  void _autoOcultarBanner() {
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _mostrarBannerActualizada = false);
+    });
+  }
   bool _editando = false;
   bool _guardando = false;
   bool _cargandoDatos = true;
@@ -143,6 +150,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
           _fechaNacimiento = _fechaEditando;
           _editando = false;
           _mostrarBannerActualizada = true;
+          _autoOcultarBanner();
         });
         // Para que el saludo de Home y el avatar reflejen el cambio sin
         // tener que volver a loguearse.
@@ -172,6 +180,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     );
     if (huboCambio == true && mounted) {
       setState(() => _mostrarBannerActualizada = true);
+      _autoOcultarBanner();
     }
   }
 
@@ -327,13 +336,16 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: colors.surfaceBorder),
                 ),
-                child: SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  activeThumbColor: colors.accent,
-                  title: Text('Modo oscuro', style: TextStyle(color: colors.textPrimary, fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 14)),
-                  secondary: Icon(Icons.dark_mode_outlined, color: colors.textSecondary),
-                  value: themeController.isDark,
-                  onChanged: (v) => themeController.setDark(v),
+                child: Material(
+                  color: Colors.transparent,
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    activeThumbColor: colors.accent,
+                    title: Text('Modo oscuro', style: TextStyle(color: colors.textPrimary, fontFamily: 'Inter', fontWeight: FontWeight.w600, fontSize: 14)),
+                    secondary: Icon(Icons.dark_mode_outlined, color: colors.textSecondary),
+                    value: themeController.isDark,
+                    onChanged: (v) => themeController.setDark(v),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
