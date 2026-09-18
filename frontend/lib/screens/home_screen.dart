@@ -15,6 +15,14 @@ import '../theme/app_theme.dart';
 
 const String _apiBaseUrl = "http://localhost:8000";
 
+const List<String> _ordenSedes = ['Morón', 'Ramos Mejía', 'San Justo', 'Castelar'];
+
+int _indiceOrdenSede(String nombre) {
+  final i = _ordenSedes.indexOf(nombre);
+  return i == -1 ? _ordenSedes.length : i;
+}
+
+
 // El backend devuelve "08:00:00" -- para mostrar solo recortamos a "08:00".
 String _hhmm(String hora) => hora.length >= 5 ? hora.substring(0, 5) : hora;
 
@@ -93,7 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
         final List sedesJson = jsonDecode(resSedes.body);
         final List espaciosJson = jsonDecode(resEspacios.body);
         setState(() {
-          _sedes = sedesJson.map((s) => Sede.fromJson(s)).where((s) => s.activa).toList();
+          _sedes = sedesJson.map((s) => Sede.fromJson(s)).where((s) => s.activa).toList()
+            ..sort((a, b) => _indiceOrdenSede(a.nombre).compareTo(_indiceOrdenSede(b.nombre)));
           _espacios = espaciosJson.map((e) => Espacio.fromJson(e)).where((e) => e.activo).toList();
           if (resReservas != null && resReservas.statusCode == 200) {
             final List reservasJson = jsonDecode(resReservas.body);
@@ -192,30 +201,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         'assets/images/cancha_hero.png',
                         fit: BoxFit.cover,
                       ),
-                      // Degradado negro->transparente (asset con canal alfa real,
-                      // no un tinte plano) para oscurecer arriba sin tapar la foto abajo.
-                      Positioned.fill(
-                        child: Image.asset('assets/images/hero_overlay.png', fit: BoxFit.fill),
-                      ),
-                      Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: RadialGradient(
-                              center: const Alignment(0, 1.1),
-                              radius: 1.1,
-                              colors: [kAccentColor.withValues(alpha: 0.18), Colors.transparent],
-                            ),
-                          ),
-                        ),
-                      ),
+                      // Degradado del hero: negro fuerte arriba (legibilidad del
+                      // texto), se aclara hasta casi transparente a mitad de
+                      // imagen, y funde al fondo del tema al final.
                       Positioned.fill(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Colors.transparent, const Color(0xFF050508)],
-                              stops: const [0.65, 1.0],
+                              colors: [
+                                const Color.fromRGBO(0, 0, 0, 0.84),
+                                const Color.fromRGBO(0, 0, 0, 0.52),
+                                const Color.fromRGBO(0, 0, 0, 0.08),
+                                colors.background,
+                              ],
+                              stops: const [0.0, 0.48, 0.72, 1.0],
                             ),
                           ),
                         ),
@@ -344,11 +345,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 10),
                               Row(
                                 children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(color: colors.surface, borderRadius: BorderRadius.circular(10)),
-                                    child: Icon(Icons.sports_tennis, color: colors.accentText, size: 20),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.asset(
+                                      espacio != null ? fotoParaCancha(espacio.id) : fotoGenerica,
+                                      width: 44,
+                                      height: 44,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
@@ -485,7 +489,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   )
                 else
                   SizedBox(
-                    height: 190,
+                    height: 230,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -496,7 +500,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         final deportes = _deportesDeSede(s.id);
                         return Container(
                           width: 220,
-                          padding: const EdgeInsets.all(14),
+                          clipBehavior: Clip.antiAlias,
                           decoration: BoxDecoration(
                             color: colors.surface,
                             borderRadius: BorderRadius.circular(16),
@@ -505,37 +509,51 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(s.nombre.toUpperCase(), style: TextStyle(color: colors.textPrimary, fontSize: 17, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800)),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(Icons.location_on_outlined, size: 13, color: colors.textMuted),
-                                  const SizedBox(width: 4),
-                                  Expanded(child: Text(s.direccion, style: TextStyle(color: colors.textSecondary, fontSize: 12, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                ],
+                              Image.asset(
+                                fotoParaSede(s.id),
+                                height: 80,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
                               ),
-                              const SizedBox(height: 10),
-                              Wrap(
-                                spacing: 6,
-                                runSpacing: 6,
-                                children: deportes.isEmpty
-                                    ? [Text('Sin espacios cargados', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter'))]
-                                    : deportes.map((d) {
-                                        final colorD = colorDeporte(d);
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(color: colorD.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(20)),
-                                          child: Text(d, style: TextStyle(color: colorD, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
-                                        );
-                                      }).toList(),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Icon(Icons.access_time, size: 12, color: colors.textMuted),
-                                  const SizedBox(width: 4),
-                                  Text('${_hhmm(s.horaApertura)} - ${_hhmm(s.horaCierre)}', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter')),
-                                ],
+                              Padding(
+                                padding: const EdgeInsets.all(14),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(s.nombre.toUpperCase(), style: TextStyle(color: colors.textPrimary, fontSize: 17, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w800)),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.location_on_outlined, size: 13, color: colors.textMuted),
+                                        const SizedBox(width: 4),
+                                        Expanded(child: Text(s.direccion, style: TextStyle(color: colors.textSecondary, fontSize: 12, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 6,
+                                      children: deportes.isEmpty
+                                          ? [Text('Sin espacios cargados', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter'))]
+                                          : deportes.map((d) {
+                                              final colorD = colorDeporte(d);
+                                              return Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                                decoration: BoxDecoration(color: colorD.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(20)),
+                                                child: Text(d, style: TextStyle(color: colorD, fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                                              );
+                                            }).toList(),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.access_time, size: 12, color: colors.textMuted),
+                                        const SizedBox(width: 4),
+                                        Text('${_hhmm(s.horaApertura)} - ${_hhmm(s.horaCierre)}', style: TextStyle(color: colors.textMuted, fontSize: 11, fontFamily: 'Inter')),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),

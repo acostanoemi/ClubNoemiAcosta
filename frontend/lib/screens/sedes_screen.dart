@@ -10,6 +10,14 @@ import 'sede_detalle_screen.dart';
 
 const String _apiBaseUrl = "http://localhost:8000";
 
+const List<String> _ordenSedes = ['Morón', 'Ramos Mejía', 'San Justo', 'Castelar'];
+
+int _indiceOrdenSede(String nombre) {
+  final i = _ordenSedes.indexOf(nombre);
+  return i == -1 ? _ordenSedes.length : i;
+}
+
+
 String _hhmm(String hora) => hora.length >= 5 ? hora.substring(0, 5) : hora;
 
 class SedesScreen extends StatefulWidget {
@@ -43,7 +51,8 @@ class _SedesScreenState extends State<SedesScreen> {
         final List sedesJson = jsonDecode(resSedes.body);
         final List espaciosJson = jsonDecode(resEspacios.body);
         setState(() {
-          _sedes = sedesJson.map((s) => Sede.fromJson(s)).where((s) => s.activa).toList();
+          _sedes = sedesJson.map((s) => Sede.fromJson(s)).where((s) => s.activa).toList()
+            ..sort((a, b) => _indiceOrdenSede(a.nombre).compareTo(_indiceOrdenSede(b.nombre)));
           _espacios = espaciosJson.map((e) => Espacio.fromJson(e)).where((e) => e.activo).toList();
         });
       } else {
@@ -92,17 +101,21 @@ class _SedesScreenState extends State<SedesScreen> {
                       // Misma foto que el hero de Home, en modo claro y oscuro
                       // por igual (es una foto, no un color de tema).
                       Image.asset('assets/images/cancha_hero.png', fit: BoxFit.cover),
-                      // Mismo degradado negro->transparente que Home, en vez de
-                      // un tinte plano -- se ve igual en modo claro y oscuro.
-                      Positioned.fill(child: Image.asset('assets/images/hero_overlay.png', fit: BoxFit.fill)),
+                      // Mismo degradado que Home: negro fuerte arriba, se
+                      // aclara hacia el centro, funde al fondo del tema abajo.
                       Positioned.fill(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Colors.transparent, colors.background],
-                              stops: const [0.6, 1.0],
+                              colors: [
+                                const Color.fromRGBO(0, 0, 0, 0.84),
+                                const Color.fromRGBO(0, 0, 0, 0.52),
+                                const Color.fromRGBO(0, 0, 0, 0.08),
+                                colors.background,
+                              ],
+                              stops: const [0.0, 0.48, 0.72, 1.0],
                             ),
                           ),
                         ),
@@ -133,6 +146,7 @@ class _SedesScreenState extends State<SedesScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 20),
                 if (_loading)
                   Padding(padding: const EdgeInsets.symmetric(vertical: 60), child: Center(child: CircularProgressIndicator(color: colors.accent)))
                 else if (_error != null)
