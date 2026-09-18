@@ -316,6 +316,17 @@ def crear_reserva(reserva: schemas.ReservaCreate, db: Session = Depends(get_db))
     if duracion < 1:
         raise HTTPException(status_code=400, detail="La reserva debe durar como mínimo 1 hora")
 
+    if datetime.combine(reserva.fecha, reserva.hora_inicio) <= datetime.now():
+        raise HTTPException(status_code=400, detail="La reserva debe ser para un horario futuro")
+
+    espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
+    if not espacio:
+        raise HTTPException(status_code=404, detail="El espacio deportivo especificado no existe")
+
+    sede = db.query(models.Sede).filter(models.Sede.id == espacio.sede_id).first()
+    if sede and reserva.hora_fin > sede.hora_cierre:
+        raise HTTPException(status_code=400, detail=f"La reserva no puede finalizar despues del horario de cierre de la sede ({sede.hora_cierre.strftime('%H:%M')})")
+
     solapada = db.query(models.Reserva).filter(
         models.Reserva.espacio_id == reserva.espacio_id,
         models.Reserva.fecha == reserva.fecha,
@@ -326,10 +337,6 @@ def crear_reserva(reserva: schemas.ReservaCreate, db: Session = Depends(get_db))
 
     if solapada:
         raise HTTPException(status_code=409, detail="El espacio deportivo no está disponible en ese horario")
-
-    espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
-    if not espacio:
-        raise HTTPException(status_code=404, detail="El espacio deportivo especificado no existe")
 
     monto_total = espacio.precio_por_hora * duracion
 
@@ -368,9 +375,16 @@ def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, db: Sessio
     if duracion < 1:
         raise HTTPException(status_code=400, detail="La reserva debe durar como minimo 1 hora")
 
+    if datetime.combine(nueva_fecha, nueva_hora_inicio) <= datetime.now():
+        raise HTTPException(status_code=400, detail="La reserva debe ser para un horario futuro")
+
     espacio_nuevo = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == nuevo_espacio_id).first()
     if not espacio_nuevo:
         raise HTTPException(status_code=404, detail="El espacio deportivo especificado no existe")
+
+    sede_nueva = db.query(models.Sede).filter(models.Sede.id == espacio_nuevo.sede_id).first()
+    if sede_nueva and nueva_hora_fin > sede_nueva.hora_cierre:
+        raise HTTPException(status_code=400, detail=f"La reserva no puede finalizar despues del horario de cierre de la sede ({sede_nueva.hora_cierre.strftime('%H:%M')})")
 
     # Si cambia de cancha, solo se permite dentro de la misma sede.
     if datos.espacio_id is not None:
