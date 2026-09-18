@@ -306,6 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     style: TextStyle(color: colors.textPrimary),
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
                     decoration: buildInputDecoration(context, 'Email', colorsOverride: AppColors.dark),
                   ),
                   const SizedBox(height: 12),
@@ -313,6 +314,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     style: TextStyle(color: colors.textPrimary),
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _handleLogin(),
                     decoration: buildInputDecoration(context, 'Contraseña', colorsOverride: AppColors.dark).copyWith(
                       suffixIcon: IconButton(
                         icon: SvgPicture.asset(
