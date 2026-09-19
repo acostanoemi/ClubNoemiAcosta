@@ -84,4 +84,27 @@ como registro histórico del desarrollo.
 
 ## Despliegue en la nube
 
-*(Pendiente — ver sección de despliegue una vez configurado en Render u otro proveedor.)*
+El backend está desplegado en [Render](https://render.com) como Web
+Service, conectado a la misma base de datos PostgreSQL usada en
+desarrollo. URL pública:
+
+https://https-club-noemi-acosta-backend-onrender.onrender.com
+
+Documentación interactiva (Swagger):
+https://https-club-noemi-acosta-backend-onrender.onrender.com/docs
+
+### Configuración usada en Render
+
+- **Root Directory:** `backend`
+- **Build Command:** `pip install -r requirements.txt && python crear_tablas.py`
+- **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- **Variables de entorno:**
+  - `DATABASE_URL` — Internal Database URL de la base PostgreSQL en Render
+  - `FIREBASE_CREDENTIALS_PATH` — `/etc/secrets/firebase-credentials.json`
+- **Secret File:** `firebase-credentials.json`, con el contenido del
+  archivo de credenciales de Firebase (el mismo usado en desarrollo
+  local)
+
+El plan usado es el gratuito (Free), que "duerme" el servicio tras 15
+minutos de inactividad — el primer pedido después de eso puede tardar
+30-60 segundos en responder mientras el servicio se reactiva.
