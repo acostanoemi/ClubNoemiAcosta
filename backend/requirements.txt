@@ -5,3 +5,6 @@ psycopg2-binary
 python-dotenv
 pydantic
 email-validator
+firebase-admin
+apscheduler
+bcrypt
