@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -11,7 +12,8 @@ import firebase_admin
 from firebase_admin import credentials, messaging
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase-credentials.json")
+    ruta_credenciales = os.getenv("FIREBASE_CREDENTIALS_PATH", "firebase-credentials.json")
+    cred = credentials.Certificate(ruta_credenciales)
     firebase_admin.initialize_app(cred)
 
 from apscheduler.schedulers.background import BackgroundScheduler
