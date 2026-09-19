@@ -7,7 +7,7 @@ import '../models/sede.dart';
 import '../models/espacio.dart';
 import '../session.dart';
 
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 const _diasCompletos = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO'];
 const _mesesCompletos = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];

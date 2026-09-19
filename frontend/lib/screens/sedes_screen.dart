@@ -8,7 +8,7 @@ import '../models/espacio.dart';
 import '../session.dart';
 import 'sede_detalle_screen.dart';
 
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 const List<String> _ordenSedes = ['Morón', 'Ramos Mejía', 'San Justo', 'Castelar'];
 

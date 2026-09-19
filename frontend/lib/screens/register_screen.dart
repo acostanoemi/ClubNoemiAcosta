@@ -6,7 +6,7 @@ import '../widgets/shared_widgets.dart';
 import '../theme/app_theme.dart';
 
 // Mismo host que main.dart usa para /auth/login.
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

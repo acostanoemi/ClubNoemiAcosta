@@ -6,7 +6,7 @@ import '../theme/app_theme.dart';
 import 'email_enviado_screen.dart';
 
 // Mismo host que main.dart usa para /auth/login y register_screen.dart para /auth/register.
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});

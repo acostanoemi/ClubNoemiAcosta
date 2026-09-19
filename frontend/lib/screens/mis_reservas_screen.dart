@@ -10,7 +10,7 @@ import '../session.dart';
 import 'detalle_reserva_screen.dart';
 import 'cancelar_reserva_screen.dart';
 
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 const _diasCortos = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
 const _mesesCortos = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];

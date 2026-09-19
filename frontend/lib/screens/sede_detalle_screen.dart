@@ -8,7 +8,7 @@ import '../models/reserva.dart';
 import '../theme/app_theme.dart';
 import 'horarios_bottom_sheet.dart';
 
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 String _hhmm(String? hora) => (hora != null && hora.length >= 5) ? hora.substring(0, 5) : (hora ?? '');
 

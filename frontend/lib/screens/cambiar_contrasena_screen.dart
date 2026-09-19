@@ -6,7 +6,7 @@ import '../theme/app_theme.dart';
 import '../session.dart';
 
 // Mismo host que el resto de las pantallas.
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 class CambiarContrasenaScreen extends StatefulWidget {
   const CambiarContrasenaScreen({super.key});

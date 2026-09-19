@@ -9,7 +9,7 @@ import '../theme/app_theme.dart';
 import '../theme/theme_scope.dart';
 import 'cambiar_contrasena_screen.dart';
 
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 class MiPerfilScreen extends StatefulWidget {
   const MiPerfilScreen({super.key});

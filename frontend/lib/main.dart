@@ -38,7 +38,7 @@ void main() async {
   runApp(const ClubApp());
 }
 
-const String apiBaseUrl = "http://localhost:8000";
+const String apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 class ClubApp extends StatefulWidget {
   const ClubApp({super.key});

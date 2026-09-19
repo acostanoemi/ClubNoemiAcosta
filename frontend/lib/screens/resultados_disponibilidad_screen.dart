@@ -8,7 +8,7 @@ import '../models/reserva.dart';
 import 'mis_reservas_screen.dart' show formatearFechaCorta, formatearMonto;
 import 'confirmar_reserva_screen.dart';
 
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 class ResultadosDisponibilidadScreen extends StatefulWidget {
   final Sede sede;

@@ -14,7 +14,7 @@ import 'consultar_canchas_screen.dart';
 import 'sede_detalle_screen.dart';
 import '../theme/app_theme.dart';
 
-const String _apiBaseUrl = "http://localhost:8000";
+const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 const List<String> _ordenSedes = ['Morón', 'Ramos Mejía', 'San Justo', 'Castelar'];
 
