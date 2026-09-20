@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -88,6 +88,7 @@ def get_db():
         db.close()
 
 import bcrypt
+import jwt
 
 def hash_password(password: str) -> str:
     password_bytes = password.encode("utf-8")[:72]
@@ -99,6 +100,37 @@ def verify_password(password_plano: str, password_hash: str) -> bool:
         return bcrypt.checkpw(password_bytes, password_hash.encode("utf-8"))
     except Exception:
         return False
+
+# --- JWT: identificacion del usuario autenticado ---
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRACION_DIAS = 30
+
+def crear_token(usuario_id) -> str:
+    payload = {
+        "sub": str(usuario_id),
+        "exp": datetime.utcnow() + timedelta(days=JWT_EXPIRACION_DIAS),
+    }
+    return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+def obtener_usuario_actual(authorization: str = Header(None), db: Session = Depends(get_db)) -> models.Usuario:
+    """Dependencia que exige un token valido en el header Authorization
+    (formato 'Bearer <token>') y devuelve el usuario autenticado.
+    Se usa en todos los endpoints que operan sobre usuarios o reservas,
+    segun lo pedido por la consigna."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="No autenticado")
+    token = authorization[len("Bearer "):].strip()
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="La sesion expiro, iniciá sesion de nuevo")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token invalido")
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == payload["sub"]).first()
+    if not usuario or not usuario.activo:
+        raise HTTPException(status_code=401, detail="Usuario no encontrado o inactivo")
+    return usuario
 
 # --- AUTENTICACIÓN ---
 
@@ -160,7 +192,8 @@ def login(credenciales: schemas.UsuarioLogin, db: Session = Depends(get_db)):
         "id": str(user.id),
         "email": user.email,
         "nombre": user.nombre,
-        "apellido": user.apellido
+        "apellido": user.apellido,
+        "token": crear_token(user.id)
     }
 
 @app.post("/auth/recover-password")
@@ -189,17 +222,15 @@ def change_password(data: schemas.ChangePassword, db: Session = Depends(get_db))
 # --- USUARIOS ---
 
 @app.get("/usuarios/{usuario_id}", response_model=schemas.UsuarioResponse)
-def obtener_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
-    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return usuario
+def obtener_usuario(usuario_id: UUID, usuario_actual: models.Usuario = Depends(obtener_usuario_actual)):
+    if usuario_actual.id != usuario_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    return usuario_actual
 
 @app.patch("/usuarios/{usuario_id}", response_model=schemas.UsuarioResponse)
-def actualizar_usuario(usuario_id: UUID, datos: schemas.UsuarioUpdate, db: Session = Depends(get_db)):
-    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+def actualizar_usuario(usuario_id: UUID, datos: schemas.UsuarioUpdate, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
+    if usuario_actual.id != usuario_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
 
     actualizaciones = datos.model_dump(exclude_unset=True)
 
@@ -212,41 +243,43 @@ def actualizar_usuario(usuario_id: UUID, datos: schemas.UsuarioUpdate, db: Sessi
             raise HTTPException(status_code=400, detail="El DNI ya esta registrado")
 
     for campo, valor in actualizaciones.items():
-        setattr(usuario, campo, valor)
+        setattr(usuario_actual, campo, valor)
 
     db.commit()
-    db.refresh(usuario)
-    return usuario
+    db.refresh(usuario_actual)
+    return usuario_actual
 
 @app.delete("/usuarios/{usuario_id}")
-def dar_de_baja_usuario(usuario_id: UUID, db: Session = Depends(get_db)):
-    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    usuario.activo = False
+def dar_de_baja_usuario(usuario_id: UUID, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
+    if usuario_actual.id != usuario_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    usuario_actual.activo = False
     db.commit()
     return {"message": "Cuenta dada de baja"}
 
 @app.post("/usuarios/{usuario_id}/fcm-token")
-def registrar_fcm_token(usuario_id: UUID, datos: schemas.FcmTokenUpdate, db: Session = Depends(get_db)):
-    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    usuario.fcm_token = datos.fcm_token
+def registrar_fcm_token(usuario_id: UUID, datos: schemas.FcmTokenUpdate, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
+    if usuario_actual.id != usuario_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    usuario_actual.fcm_token = datos.fcm_token
     db.commit()
     return {"message": "Token registrado"}
 
 @app.get("/usuarios/{usuario_id}/notificaciones", response_model=List[schemas.NotificacionResponse])
-def obtener_notificaciones(usuario_id: UUID, db: Session = Depends(get_db)):
+def obtener_notificaciones(usuario_id: UUID, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
+    if usuario_actual.id != usuario_id:
+        raise HTTPException(status_code=403, detail="No autorizado")
     return db.query(models.Notificacion).filter(
         models.Notificacion.usuario_id == usuario_id
     ).order_by(models.Notificacion.creada_en.desc()).all()
 
 @app.patch("/notificaciones/{notificacion_id}")
-def marcar_notificacion_leida(notificacion_id: UUID, db: Session = Depends(get_db)):
+def marcar_notificacion_leida(notificacion_id: UUID, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
     notif = db.query(models.Notificacion).filter(models.Notificacion.id == notificacion_id).first()
     if not notif:
         raise HTTPException(status_code=404, detail="Notificación no encontrada")
+    if notif.usuario_id != usuario_actual.id:
+        raise HTTPException(status_code=403, detail="No autorizado")
     notif.leida = True
     db.commit()
     return {"message": "Notificación marcada como leída"}
@@ -297,7 +330,9 @@ def crear_espacio(espacio: schemas.EspacioCreate, db: Session = Depends(get_db))
 # --- RESERVAS ---
 
 @app.get("/reservas", response_model=List[schemas.ReservaResponse])
-def obtener_reservas(usuario_id: Optional[UUID] = None, espacio_id: Optional[UUID] = None, fecha: Optional[date] = None, incluir_canceladas: bool = False, db: Session = Depends(get_db)):
+def obtener_reservas(usuario_id: Optional[UUID] = None, espacio_id: Optional[UUID] = None, fecha: Optional[date] = None, incluir_canceladas: bool = False, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
+    if usuario_id is not None and usuario_id != usuario_actual.id:
+        raise HTTPException(status_code=403, detail="No autorizado")
     query = db.query(models.Reserva)
     if usuario_id:
         query = query.filter(models.Reserva.usuario_id == usuario_id)
@@ -310,7 +345,7 @@ def obtener_reservas(usuario_id: Optional[UUID] = None, espacio_id: Optional[UUI
     return query.all()
 
 @app.post("/reservas", response_model=schemas.ReservaResponse, status_code=status.HTTP_201_CREATED)
-def crear_reserva(reserva: schemas.ReservaCreate, db: Session = Depends(get_db)):
+def crear_reserva(reserva: schemas.ReservaCreate, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
     if reserva.hora_inicio.minute != 0 or reserva.hora_fin.minute != 0:
         raise HTTPException(status_code=400, detail="Las reservas deben hacerse en horarios en punto (minuto 00)")
 
@@ -346,7 +381,7 @@ def crear_reserva(reserva: schemas.ReservaCreate, db: Session = Depends(get_db))
     monto_total = espacio.precio_por_hora * duracion
 
     nueva_reserva = models.Reserva(
-        usuario_id=reserva.usuario_id,
+        usuario_id=usuario_actual.id,
         espacio_id=reserva.espacio_id,
         fecha=reserva.fecha,
         hora_inicio=reserva.hora_inicio,
@@ -361,10 +396,12 @@ def crear_reserva(reserva: schemas.ReservaCreate, db: Session = Depends(get_db))
     return nueva_reserva
 
 @app.patch("/reservas/{reserva_id}", response_model=schemas.ReservaResponse)
-def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, db: Session = Depends(get_db)):
+def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
     reserva = db.query(models.Reserva).filter(models.Reserva.id == reserva_id).first()
     if not reserva:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    if reserva.usuario_id != usuario_actual.id:
+        raise HTTPException(status_code=403, detail="No autorizado")
     if reserva.estado == "cancelada":
         raise HTTPException(status_code=400, detail="No se puede modificar una reserva cancelada")
 
@@ -423,10 +460,12 @@ def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, db: Sessio
     return reserva
 
 @app.delete("/reservas/{reserva_id}")
-def cancelar_reserva(reserva_id: UUID, forzada: bool = False, db: Session = Depends(get_db)):
+def cancelar_reserva(reserva_id: UUID, forzada: bool = False, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
     reserva = db.query(models.Reserva).filter(models.Reserva.id == reserva_id).first()
     if not reserva:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    if reserva.usuario_id != usuario_actual.id:
+        raise HTTPException(status_code=403, detail="No autorizado")
 
     reserva.estado = "cancelada"
     db.commit()

@@ -8,3 +8,5 @@ email-validator
 firebase-admin
 apscheduler
 bcrypt
+pyjwt
+pyjwt

@@ -104,7 +104,6 @@ class EspacioResponse(BaseModel):
 
 # --- RESERVAS ---
 class ReservaCreate(BaseModel):
-    usuario_id: UUID
     espacio_id: UUID
     fecha: date
     hora_inicio: time
