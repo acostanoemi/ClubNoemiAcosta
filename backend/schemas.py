@@ -18,6 +18,9 @@ class UsuarioLogin(BaseModel):
 
 class RecoverPassword(BaseModel):
     email: EmailStr
+
+class ConfirmarRecuperacion(BaseModel):
+    token: str
     new_password: str
 
 class UsuarioUpdate(BaseModel):
