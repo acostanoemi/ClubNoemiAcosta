@@ -1,6 +1,6 @@
 # Club Noemi Acosta
 
-Aplicación móvil para la gestión y reserva de espacios deportivos —
+Aplicación móvil para la gestión y reserva de espacios deportivos -
 Trabajo Práctico de Electiva General, Universidad de Morón.
 
 Los usuarios pueden registrarse, consultar la disponibilidad de
