@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'restablecer_contrasena_screen.dart';
 
 class EmailEnviadoScreen extends StatelessWidget {
   final String email;
+  final String? resetToken;
 
   const EmailEnviadoScreen({
     super.key,
     required this.email,
+    this.resetToken,
   });
 
   @override
@@ -138,6 +141,31 @@ class EmailEnviadoScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (resetToken != null) ...[
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 38,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFD4FF00),
+                            side: const BorderSide(color: Color(0xFFD4FF00)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => RestablecerContrasenaScreen(token: resetToken!),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'YA TENGO EL ENLACE (MODO PRUEBA)',
+                            style: TextStyle(fontSize: 11, fontFamily: 'Inter', fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,

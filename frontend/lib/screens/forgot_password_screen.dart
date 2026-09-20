@@ -70,9 +70,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => EmailEnviadoScreen(email: email),
+            builder: (_) => EmailEnviadoScreen(email: email, resetToken: data['reset_token']),
           ),
         );
         return;
