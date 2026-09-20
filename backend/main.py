@@ -326,6 +326,9 @@ def crear_reserva(reserva: schemas.ReservaCreate, db: Session = Depends(get_db))
         raise HTTPException(status_code=404, detail="El espacio deportivo especificado no existe")
 
     sede = db.query(models.Sede).filter(models.Sede.id == espacio.sede_id).first()
+    if sede and reserva.hora_inicio < sede.hora_apertura:
+        raise HTTPException(status_code=400, detail=f"La reserva no puede empezar antes del horario de apertura de la sede ({sede.hora_apertura.strftime('%H:%M')})")
+
     if sede and reserva.hora_fin > sede.hora_cierre:
         raise HTTPException(status_code=400, detail=f"La reserva no puede finalizar despues del horario de cierre de la sede ({sede.hora_cierre.strftime('%H:%M')})")
 
@@ -385,6 +388,9 @@ def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, db: Sessio
         raise HTTPException(status_code=404, detail="El espacio deportivo especificado no existe")
 
     sede_nueva = db.query(models.Sede).filter(models.Sede.id == espacio_nuevo.sede_id).first()
+    if sede_nueva and nueva_hora_inicio < sede_nueva.hora_apertura:
+        raise HTTPException(status_code=400, detail=f"La reserva no puede empezar antes del horario de apertura de la sede ({sede_nueva.hora_apertura.strftime('%H:%M')})")
+
     if sede_nueva and nueva_hora_fin > sede_nueva.hora_cierre:
         raise HTTPException(status_code=400, detail=f"La reserva no puede finalizar despues del horario de cierre de la sede ({sede_nueva.hora_cierre.strftime('%H:%M')})")
 
