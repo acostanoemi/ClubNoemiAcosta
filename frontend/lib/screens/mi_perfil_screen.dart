@@ -63,7 +63,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
   Future<void> _cargarUsuario() async {
     if (Session.id == null) return;
     try {
-      final response = await http.get(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'));
+      final response = await http.get(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'), headers: Session.authHeader);
       if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -131,7 +131,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     try {
       final response = await http.patch(
         Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', ...Session.authHeader},
         body: jsonEncode({
           'nombre': nuevoNombre,
           'apellido': nuevoApellido,
@@ -154,7 +154,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
         });
         // Para que el saludo de Home y el avatar reflejen el cambio sin
         // tener que volver a loguearse.
-        Session.set(id: Session.id!, email: Session.email!, nombre: nuevoNombre, apellido: nuevoApellido);
+        Session.set(id: Session.id!, email: Session.email!, nombre: nuevoNombre, apellido: nuevoApellido, token: Session.token!);
       } else {
         String detail = 'No pudimos actualizar el perfil';
         try {
@@ -201,7 +201,7 @@ class _MiPerfilScreenState extends State<MiPerfilScreen> {
     if (confirmado == true && mounted) {
       setState(() => _guardando = true);
       try {
-        final response = await http.delete(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'));
+        final response = await http.delete(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'), headers: Session.authHeader);
         if (!mounted) return;
 
         if (response.statusCode == 200) {

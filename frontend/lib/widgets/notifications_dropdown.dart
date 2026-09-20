@@ -37,6 +37,7 @@ class _NotificationsDropdownState extends State<NotificationsDropdown> {
     try {
       final res = await http.get(
         Uri.parse('$_apiBaseUrl/usuarios/${Session.id}/notificaciones'),
+        headers: Session.authHeader,
       );
       if (res.statusCode == 200) {
         setState(() {
@@ -62,7 +63,7 @@ class _NotificationsDropdownState extends State<NotificationsDropdown> {
     // solo queda desincronizado hasta la próxima apertura del dropdown.
     setState(() => _notificaciones[index]['leida'] = true);
     try {
-      await http.patch(Uri.parse('$_apiBaseUrl/notificaciones/$id'));
+      await http.patch(Uri.parse('$_apiBaseUrl/notificaciones/$id'), headers: Session.authHeader);
     } catch (_) {}
   }
 

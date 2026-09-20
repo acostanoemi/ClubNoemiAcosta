@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/shared_widgets.dart';
 import '../theme/app_theme.dart';
+import '../session.dart';
 import '../models/sede.dart';
 import '../models/espacio.dart';
 import '../models/reserva.dart';
@@ -87,7 +88,7 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
     });
     try {
       final fechaStr = _fechaSeleccionada.toIso8601String().split('T').first;
-      final response = await http.get(Uri.parse('$_apiBaseUrl/reservas?espacio_id=${widget.espacio.id}&fecha=$fechaStr'));
+      final response = await http.get(Uri.parse('$_apiBaseUrl/reservas?espacio_id=${widget.espacio.id}&fecha=$fechaStr'), headers: Session.authHeader);
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         var reservas = data.map((r) => Reserva.fromJson(r)).toList();
@@ -160,7 +161,7 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
     try {
       final response = await http.patch(
         Uri.parse('$_apiBaseUrl/reservas/${widget.reservaAModificar!.id}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', ...Session.authHeader},
         body: jsonEncode({
           'espacio_id': widget.espacio.id,
           'fecha': _fechaSeleccionada.toIso8601String().split('T').first,

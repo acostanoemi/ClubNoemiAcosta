@@ -88,7 +88,7 @@ class _MisReservasScreenState extends State<MisReservasScreen> {
       _error = null;
     });
     try {
-      final resReservas = await http.get(Uri.parse('$_apiBaseUrl/reservas?usuario_id=${Session.id}&incluir_canceladas=true'));
+      final resReservas = await http.get(Uri.parse('$_apiBaseUrl/reservas?usuario_id=${Session.id}&incluir_canceladas=true'), headers: Session.authHeader);
       final resEspacios = await http.get(Uri.parse('$_apiBaseUrl/espacios'));
       final resSedes = await http.get(Uri.parse('$_apiBaseUrl/sedes'));
 

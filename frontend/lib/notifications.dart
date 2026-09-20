@@ -29,7 +29,7 @@ class Notifications {
 
       await http.post(
         Uri.parse('$apiBaseUrl/usuarios/${Session.id}/fcm-token'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', ...Session.authHeader},
         body: jsonEncode({'fcm_token': token}),
       );
     } catch (e) {

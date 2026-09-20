@@ -90,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _verificarNotificacionesSinLeer() async {
     if (Session.id == null) return;
     try {
-      final res = await http.get(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}/notificaciones'));
+      final res = await http.get(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}/notificaciones'), headers: Session.authHeader);
       if (res.statusCode == 200) {
         final List notifs = jsonDecode(res.body);
         final hayNoLeidas = notifs.any((n) => n['leida'] == false);
@@ -112,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final resEspacios = await http.get(Uri.parse('$_apiBaseUrl/espacios'));
       final resReservas = Session.id == null
           ? null
-          : await http.get(Uri.parse('$_apiBaseUrl/reservas?usuario_id=${Session.id}'));
+          : await http.get(Uri.parse('$_apiBaseUrl/reservas?usuario_id=${Session.id}'), headers: Session.authHeader);
 
       if (resSedes.statusCode == 200 && resEspacios.statusCode == 200) {
         final List sedesJson = jsonDecode(resSedes.body);

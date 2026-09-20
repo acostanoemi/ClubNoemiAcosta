@@ -32,7 +32,7 @@ class _ProfileDropdownState extends State<ProfileDropdown> {
       return;
     }
     try {
-      final response = await http.get(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'));
+      final response = await http.get(Uri.parse('$_apiBaseUrl/usuarios/${Session.id}'), headers: Session.authHeader);
       if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

@@ -58,9 +58,8 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
     try {
       final response = await http.post(
         Uri.parse('$_apiBaseUrl/reservas'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', ...Session.authHeader},
         body: jsonEncode({
-          'usuario_id': Session.id,
           'espacio_id': widget.espacio.id,
           'fecha': fechaStr,
           'hora_inicio': horaInicioStr,

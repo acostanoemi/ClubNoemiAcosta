@@ -230,6 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
           email: data['email'],
           nombre: data['nombre'],
           apellido: data['apellido'],
+          token: data['token'],
         );
         await Notifications.registrarToken(apiBaseUrl);
         if (!mounted) return;

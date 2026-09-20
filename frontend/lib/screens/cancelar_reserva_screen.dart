@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
+import '../session.dart';
 import 'mis_reservas_screen.dart';
 
 const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
@@ -24,7 +25,7 @@ class _CancelarReservaScreenState extends State<CancelarReservaScreen> {
       _error = null;
     });
     try {
-      final response = await http.delete(Uri.parse('$_apiBaseUrl/reservas/${widget.item.reserva.id}'));
+      final response = await http.delete(Uri.parse('$_apiBaseUrl/reservas/${widget.item.reserva.id}'), headers: Session.authHeader);
       if (!mounted) return;
 
       if (response.statusCode == 200 || response.statusCode == 204) {

@@ -5,32 +5,41 @@ class Session {
   static String? email;
   static String? nombre;
   static String? apellido;
+  static String? token;
 
   static const _kId = 'session_id';
   static const _kEmail = 'session_email';
   static const _kNombre = 'session_nombre';
   static const _kApellido = 'session_apellido';
+  static const _kToken = 'session_token';
 
   static void set({
     required String id,
     required String email,
     required String nombre,
     required String apellido,
+    required String token,
   }) {
     Session.id = id;
     Session.email = email;
     Session.nombre = nombre;
     Session.apellido = apellido;
+    Session.token = token;
     _guardar();
   }
 
   static bool get estaLogueado => email != null;
+
+  /// Header listo para pegarle a cualquier pedido HTTP protegido.
+  static Map<String, String> get authHeader =>
+      token != null ? {'Authorization': 'Bearer $token'} : {};
 
   static void clear() {
     id = null;
     email = null;
     nombre = null;
     apellido = null;
+    token = null;
     _borrar();
   }
 
@@ -43,6 +52,7 @@ class Session {
     await prefs.setString(_kEmail, email ?? '');
     await prefs.setString(_kNombre, nombre ?? '');
     await prefs.setString(_kApellido, apellido ?? '');
+    await prefs.setString(_kToken, token ?? '');
   }
 
   static Future<void> _borrar() async {
@@ -51,6 +61,7 @@ class Session {
     await prefs.remove(_kEmail);
     await prefs.remove(_kNombre);
     await prefs.remove(_kApellido);
+    await prefs.remove(_kToken);
   }
 
   /// Carga la sesión guardada desde disco, si existe. Se llama una
@@ -64,5 +75,6 @@ class Session {
     email = savedEmail;
     nombre = prefs.getString(_kNombre);
     apellido = prefs.getString(_kApellido);
+    token = prefs.getString(_kToken);
   }
 }

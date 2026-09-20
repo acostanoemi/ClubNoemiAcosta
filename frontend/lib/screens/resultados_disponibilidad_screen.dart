@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../theme/app_theme.dart';
+import '../session.dart';
 import '../models/sede.dart';
 import '../models/espacio.dart';
 import '../models/reserva.dart';
@@ -65,7 +66,7 @@ class _ResultadosDisponibilidadScreenState extends State<ResultadosDisponibilida
       final disponibles = <Espacio>[];
 
       for (final espacio in candidatos) {
-        final resReservas = await http.get(Uri.parse('$_apiBaseUrl/reservas?espacio_id=${espacio.id}&fecha=$fechaStr'));
+        final resReservas = await http.get(Uri.parse('$_apiBaseUrl/reservas?espacio_id=${espacio.id}&fecha=$fechaStr'), headers: Session.authHeader);
         if (resReservas.statusCode != 200) continue;
 
         final List reservasJson = jsonDecode(resReservas.body);
