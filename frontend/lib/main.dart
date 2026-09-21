@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -32,9 +33,25 @@ const FirebaseOptions _firebaseOptionsWeb = FirebaseOptions(
   measurementId: "G-DMKRMFJ19P",
 );
 
+const FirebaseOptions _firebaseOptionsAndroid = FirebaseOptions(
+  apiKey: "AIzaSyBN9CpkVhTithJyqxfSxXPhgwAGEra_xas",
+  appId: "1:1062598928107:android:766cb0f122518ddfaf00ae",
+  messagingSenderId: "1062598928107",
+  projectId: "clubnoemiacosta",
+  storageBucket: "clubnoemiacosta.firebasestorage.app",
+);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: _firebaseOptionsWeb);
+  if (kIsWeb) {
+    await Firebase.initializeApp(options: _firebaseOptionsWeb);
+  } else {
+    // En Android, se pasan las credenciales de forma explicita (en vez de
+    // depender del plugin de Gradle de Google Services, que no es
+    // compatible con esta version de AGP/Kotlin) -- vienen del
+    // google-services.json descargado de Firebase Console.
+    await Firebase.initializeApp(options: _firebaseOptionsAndroid);
+  }
   runApp(const ClubApp());
 }
 
