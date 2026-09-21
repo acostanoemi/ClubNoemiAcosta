@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/shared_widgets.dart';
@@ -282,7 +282,7 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                           child: Text('No quedan horarios libres este día.', style: TextStyle(color: colors.textSecondary, fontFamily: 'Inter')),
                         )
                       else
-                        Wrap(
+                        LayoutBuilder(builder: (context, constraints) => Wrap(
                           spacing: 10,
                           runSpacing: 10,
                           children: _horariosDisponibles.map((h) {
@@ -291,7 +291,7 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                             return GestureDetector(
                               onTap: () => setState(() => _horaSeleccionada = h),
                               child: Container(
-                                width: (MediaQuery.of(context).size.width - 20 * 2 - 10) / 2,
+                                width: (constraints.maxWidth - 10) / 2,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 decoration: BoxDecoration(
                                   color: activo ? colors.accent : colors.surface,
@@ -302,7 +302,7 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                               ),
                             );
                           }).toList(),
-                        ),
+                        )),
                       if (_noDisponibles > 0) ...[
                         const SizedBox(height: 10),
                         Row(
@@ -321,13 +321,7 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(widget.espacio.subcategoria ?? widget.espacio.deporte, style: TextStyle(color: colors.textPrimary, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
-                                Text('\$ ${widget.espacio.precioPorHora.round()} × $_duracionHoras', style: TextStyle(color: colors.textPrimary, fontSize: 13, fontFamily: 'Inter')),
-                              ],
-                            ),
+                            Text(widget.espacio.subcategoria ?? widget.espacio.deporte, style: TextStyle(color: colors.textPrimary, fontSize: 15, fontFamily: 'Inter', fontWeight: FontWeight.w800)),
                             Text('${widget.espacio.deporte} · ${_duracionHoras}h', style: TextStyle(color: colors.textSecondary, fontSize: 12, fontFamily: 'Inter')),
                             const SizedBox(height: 10),
                             Divider(height: 1, color: colors.surfaceBorder),
