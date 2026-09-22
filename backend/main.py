@@ -1,4 +1,4 @@
-import os
+﻿import os
 from fastapi import FastAPI, HTTPException, Depends, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -389,8 +389,8 @@ def crear_reserva(reserva: schemas.ReservaCreate, usuario_actual: models.Usuario
     if duracion < 1:
         raise HTTPException(status_code=400, detail="La reserva debe durar como mínimo 1 hora")
 
-    if datetime.combine(reserva.fecha, reserva.hora_inicio) <= datetime.now():
-        raise HTTPException(status_code=400, detail="La reserva debe ser para un horario futuro")
+    if datetime.combine(reserva.fecha, reserva.hora_inicio) < datetime.now() + timedelta(hours=2):
+        raise HTTPException(status_code=400, detail="La reserva debe hacerse con al menos 2 horas de anticipacion")
 
     espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
     if not espacio:
@@ -453,8 +453,8 @@ def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, usuario_ac
     if duracion < 1:
         raise HTTPException(status_code=400, detail="La reserva debe durar como minimo 1 hora")
 
-    if datetime.combine(nueva_fecha, nueva_hora_inicio) <= datetime.now():
-        raise HTTPException(status_code=400, detail="La reserva debe ser para un horario futuro")
+    if datetime.combine(nueva_fecha, nueva_hora_inicio) < datetime.now() + timedelta(hours=2):
+        raise HTTPException(status_code=400, detail="La reserva debe hacerse con al menos 2 horas de anticipacion")
 
     espacio_nuevo = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == nuevo_espacio_id).first()
     if not espacio_nuevo:
