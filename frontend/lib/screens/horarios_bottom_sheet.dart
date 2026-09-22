@@ -135,7 +135,6 @@ class _HorariosBottomSheetState extends State<HorariosBottomSheet> {
     if (_horaSeleccionada == null) return;
 
     if (!_editando) {
-      Navigator.of(context).pop();
       Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => ConfirmarReservaScreen(
           sede: widget.sede,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../widgets/shared_widgets.dart';
@@ -165,7 +165,10 @@ class _ConfirmarReservaScreenState extends State<ConfirmarReservaScreen> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // cierra Confirmar
+                      Navigator.of(context).pop(true); // cierra tambien la grilla de horarios, avisa exito
+                    },
                     style: ElevatedButton.styleFrom(backgroundColor: colors.accent, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
                     child: const Text('VOLVER', style: TextStyle(color: Colors.black, fontSize: 15, fontFamily: 'Barlow Condensed', fontWeight: FontWeight.w900)),
                   ),
