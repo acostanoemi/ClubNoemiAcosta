@@ -20,7 +20,7 @@ erDiagram
         string dni UK
         date fecha_nacimiento
         string email UK
-        string password
+        string firebase_uid UK
         boolean activo
         string fcm_token
     }
@@ -84,7 +84,7 @@ Representa a cada persona registrada en la app.
 | `dni` | String (único) | Documento de identidad |
 | `fecha_nacimiento` | Date | Fecha de nacimiento |
 | `email` | String (único) | Usado para iniciar sesión |
-| `password` | String | Contraseña hasheada con bcrypt |
+| `firebase_uid` | String (único, nullable) | UID de la cuenta en Firebase Authentication. Las contraseñas las guarda Firebase, no esta base. Queda en `null` si el usuario dio de baja su cuenta |
 | `activo` | Boolean | `false` si el usuario dio de baja su cuenta |
 | `fcm_token` | String (nullable) | Token del dispositivo para notificaciones push |
 

@@ -91,6 +91,14 @@ class Session {
     final usuarioFirebase = await FirebaseAuth.instance.authStateChanges().first;
 
     final prefs = await SharedPreferences.getInstance();
+
+    // Sin usuario de Firebase no hay sesion valida: puede ser una sesion
+    // vieja (del login con JWT propio) o una que Firebase ya cerro.
+    if (usuarioFirebase == null) {
+      await _borrar();
+      return;
+    }
+
     final savedEmail = prefs.getString(_kEmail);
     if (savedEmail == null || savedEmail.isEmpty) return;
 
@@ -98,12 +106,6 @@ class Session {
     email = savedEmail;
     nombre = prefs.getString(_kNombre);
     apellido = prefs.getString(_kApellido);
-    token = prefs.getString(_kToken);
-
-    // Si hay usuario de Firebase, su token manda. Si no, queda el JWT
-    // viejo guardado (TEMPORAL, mientras el backend acepte los dos).
-    if (usuarioFirebase != null) {
-      token = await usuarioFirebase.getIdToken();
-    }
+    token = await usuarioFirebase.getIdToken();
   }
 }

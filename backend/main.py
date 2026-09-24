@@ -87,32 +87,6 @@ def get_db():
     finally:
         db.close()
 
-import bcrypt
-import jwt
-
-def hash_password(password: str) -> str:
-    password_bytes = password.encode("utf-8")[:72]
-    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
-
-def verify_password(password_plano: str, password_hash: str) -> bool:
-    try:
-        password_bytes = password_plano.encode("utf-8")[:72]
-        return bcrypt.checkpw(password_bytes, password_hash.encode("utf-8"))
-    except Exception:
-        return False
-
-# --- JWT: identificacion del usuario autenticado ---
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRACION_DIAS = 30
-
-def crear_token(usuario_id) -> str:
-    payload = {
-        "sub": str(usuario_id),
-        "exp": datetime.utcnow() + timedelta(days=JWT_EXPIRACION_DIAS),
-    }
-    return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
-
 def _extraer_bearer(authorization: Optional[str]) -> str:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="No autenticado")
@@ -131,71 +105,17 @@ def obtener_claims_firebase(authorization: str = Header(None)) -> dict:
         raise HTTPException(status_code=401, detail="Token invalido")
 
 def obtener_usuario_actual(authorization: str = Header(None), db: Session = Depends(get_db)) -> models.Usuario:
-    """Dependencia que exige un token valido en el header Authorization
-    (formato 'Bearer <token>') y devuelve el usuario autenticado.
-
-    Durante la migracion acepta dos tipos de token:
-    1. ID token de Firebase (el nuevo): se busca el usuario por firebase_uid.
-    2. JWT propio (el viejo): se busca por id. TEMPORAL, se borra cuando
-       la app ya no use /auth/login."""
-    token = _extraer_bearer(authorization)
-    usuario = None
-
-    try:
-        claims = firebase_auth.verify_id_token(token)
-        usuario = db.query(models.Usuario).filter(models.Usuario.firebase_uid == claims["uid"]).first()
-    except firebase_auth.ExpiredIdTokenError:
-        raise HTTPException(status_code=401, detail="La sesion expiro, iniciá sesion de nuevo")
-    except Exception:
-        # No es un token de Firebase: probamos con el JWT viejo (TEMPORAL)
-        try:
-            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="La sesion expiro, iniciá sesion de nuevo")
-        except jwt.InvalidTokenError:
-            raise HTTPException(status_code=401, detail="Token invalido")
-        usuario = db.query(models.Usuario).filter(models.Usuario.id == payload["sub"]).first()
-
+    """Dependencia que exige un ID token de Firebase valido en el header
+    Authorization (formato 'Bearer <token>') y devuelve el usuario del club
+    atado a ese uid. Se usa en todos los endpoints que operan sobre
+    usuarios o reservas."""
+    claims = obtener_claims_firebase(authorization)
+    usuario = db.query(models.Usuario).filter(models.Usuario.firebase_uid == claims["uid"]).first()
     if not usuario or not usuario.activo:
         raise HTTPException(status_code=401, detail="Usuario no encontrado o inactivo")
     return usuario
 
 # --- AUTENTICACIÓN ---
-
-@app.post("/auth/register", response_model=schemas.UsuarioResponse, status_code=status.HTTP_201_CREATED)
-def registrar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
-    user_email = db.query(models.Usuario).filter(models.Usuario.email == usuario.email).first()
-    user_dni = db.query(models.Usuario).filter(models.Usuario.dni == usuario.dni).first()
-
-    # Si el email o el DNI ya pertenecen a una cuenta activa, no se puede registrar.
-    if user_email and user_email.activo:
-        raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado")
-    if user_dni and user_dni.activo:
-        raise HTTPException(status_code=400, detail="El DNI ya está registrado")
-
-    # Si coincide con una cuenta dada de baja (mismo email o DNI), se reactiva
-    # en vez de crear una fila nueva -- evita choques de unicidad y conserva
-    # el historial de reservas de esa cuenta.
-    cuenta_inactiva = user_email or user_dni
-    if cuenta_inactiva and not cuenta_inactiva.activo:
-        cuenta_inactiva.nombre = usuario.nombre
-        cuenta_inactiva.apellido = usuario.apellido
-        cuenta_inactiva.dni = usuario.dni
-        cuenta_inactiva.fecha_nacimiento = usuario.fecha_nacimiento
-        cuenta_inactiva.email = usuario.email
-        cuenta_inactiva.password = hash_password(usuario.password)
-        cuenta_inactiva.activo = True
-        db.commit()
-        db.refresh(cuenta_inactiva)
-        return cuenta_inactiva
-
-    datos_usuario = usuario.model_dump()
-    datos_usuario["password"] = hash_password(datos_usuario["password"])
-    nuevo_usuario = models.Usuario(**datos_usuario)
-    db.add(nuevo_usuario)
-    db.commit()
-    db.refresh(nuevo_usuario)
-    return nuevo_usuario
 
 @app.post("/auth/perfil", response_model=schemas.UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def completar_perfil(datos: schemas.PerfilCreate, claims: dict = Depends(obtener_claims_firebase), db: Session = Depends(get_db)):
@@ -235,7 +155,7 @@ def completar_perfil(datos: schemas.PerfilCreate, claims: dict = Depends(obtener
         cuenta.firebase_uid = uid
         cuenta.activo = True
     else:
-        cuenta = models.Usuario(**datos.model_dump(), email=email, firebase_uid=uid, password=None)
+        cuenta = models.Usuario(**datos.model_dump(), email=email, firebase_uid=uid)
         db.add(cuenta)
 
     db.commit()
@@ -247,92 +167,6 @@ def usuario_logueado(usuario_actual: models.Usuario = Depends(obtener_usuario_ac
     """Devuelve los datos del usuario dueño del token. La app lo llama
     justo despues de loguearse con Firebase, para saber su id y nombre."""
     return usuario_actual
-
-@app.post("/auth/login")
-def login(credenciales: schemas.UsuarioLogin, db: Session = Depends(get_db)):
-    # Limpiamos espacios en blanco accidentales de ambos lados
-    email_clean = credenciales.email.strip().lower()
-    pass_clean = credenciales.password.strip()
-
-    # Buscamos el usuario comparando emails en minúscula
-    user = db.query(models.Usuario).filter(models.Usuario.email.ilike(email_clean)).first()
-    
-    if not user:
-        raise HTTPException(status_code=401, detail="El correo electrónico no existe")
-
-    if not user.activo:
-        raise HTTPException(status_code=403, detail="Esta cuenta fue dada de baja")
-
-    if not verify_password(pass_clean, user.password):
-        raise HTTPException(status_code=401, detail="Contraseña incorrecta")
-    
-    return {
-        "message": "Login exitoso",
-        "id": str(user.id),
-        "email": user.email,
-        "nombre": user.nombre,
-        "apellido": user.apellido,
-        "token": crear_token(user.id)
-    }
-
-RESET_PASSWORD_EXPIRACION_MINUTOS = 30
-
-def crear_token_reset(usuario_id) -> str:
-    payload = {
-        "sub": str(usuario_id),
-        "proposito": "reset_password",
-        "exp": datetime.utcnow() + timedelta(minutes=RESET_PASSWORD_EXPIRACION_MINUTOS),
-    }
-    return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
-
-@app.post("/auth/recover-password")
-def recover_password(data: schemas.RecoverPassword, db: Session = Depends(get_db)):
-    user = db.query(models.Usuario).filter(models.Usuario.email.ilike(data.email.strip().lower())).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
-    token_reset = crear_token_reset(user.id)
-
-    # TODO: mandar este enlace por email de verdad cuando haya un servicio
-    # de correo configurado (ej. SMTP/SendGrid). Por ahora se devuelve
-    # directo en la respuesta para poder probar el flujo completo.
-    return {
-        "message": "Se genero un enlace de recuperacion",
-        "reset_token": token_reset,
-    }
-
-@app.post("/auth/reset-password")
-def reset_password(data: schemas.ConfirmarRecuperacion, db: Session = Depends(get_db)):
-    try:
-        payload = jwt.decode(data.token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=400, detail="El enlace expiro, solicita uno nuevo")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=400, detail="Enlace invalido")
-
-    if payload.get("proposito") != "reset_password":
-        raise HTTPException(status_code=400, detail="Enlace invalido")
-
-    user = db.query(models.Usuario).filter(models.Usuario.id == payload["sub"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
-    user.password = hash_password(data.new_password)
-    db.commit()
-    return {"message": "Contraseña actualizada exitosamente"}
-
-@app.put("/auth/change-password")
-def change_password(data: schemas.ChangePassword, db: Session = Depends(get_db)):
-    user = db.query(models.Usuario).filter(models.Usuario.email.ilike(data.email.strip().lower())).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
-    if not verify_password(data.current_password.strip(), user.password):
-        raise HTTPException(status_code=401, detail="La contraseña actual no es correcta")
-
-    user.password = hash_password(data.new_password)
-    db.commit()
-    return {"message": "Contraseña actualizada exitosamente"}
 
 # --- USUARIOS ---
 

@@ -3,14 +3,17 @@
 API REST para la gestión de espacios deportivos (sedes, canchas, reservas,
 usuarios y notificaciones push) del trabajo práctico de Electiva General.
 
-Construida con **FastAPI** + **SQLAlchemy** + **PostgreSQL**, con
-notificaciones push vía **Firebase Cloud Messaging**.
+Construida con **FastAPI** + **SQLAlchemy** + **PostgreSQL**. La
+autenticación la hace **Firebase Authentication**: la app se loguea contra
+Firebase y manda el ID token en el header `Authorization: Bearer <token>`,
+que el backend verifica con el Firebase Admin SDK. Las notificaciones push
+van por **Firebase Cloud Messaging**.
 
 ## Requisitos
 
 - Python 3.10 o superior
 - Una base de datos PostgreSQL (local o en la nube, por ejemplo [Render](https://render.com))
-- Credenciales de un proyecto de Firebase con Cloud Messaging habilitado
+- Credenciales de un proyecto de Firebase con Cloud Messaging y Authentication (proveedor Email/Password) habilitados
 
 ## 1. Clonar e instalar dependencias
 

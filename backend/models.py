@@ -14,7 +14,6 @@ class Usuario(Base):
     dni = Column(String, unique=True, nullable=False)
     fecha_nacimiento = Column(Date, nullable=False)
     email = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=True)  # None en cuentas creadas con Firebase Auth
     firebase_uid = Column(String, unique=True, nullable=True)
     activo = Column(Boolean, default=True)
     fcm_token = Column(String, nullable=True)

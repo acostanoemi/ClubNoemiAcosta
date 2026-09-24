@@ -4,30 +4,11 @@ from uuid import UUID
 from typing import Optional
 
 # --- USUARIOS & AUTH ---
-class UsuarioCreate(BaseModel):
-    nombre: str
-    apellido: str
-    dni: str
-    fecha_nacimiento: date
-    email: EmailStr
-    password: str
-
 class PerfilCreate(BaseModel):
     nombre: str
     apellido: str
     dni: str
     fecha_nacimiento: date
-
-class UsuarioLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class RecoverPassword(BaseModel):
-    email: EmailStr
-
-class ConfirmarRecuperacion(BaseModel):
-    token: str
-    new_password: str
 
 class UsuarioUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -48,10 +29,6 @@ class UsuarioResponse(BaseModel):
 
     class Config:
         from_attributes = True
-class ChangePassword(BaseModel):
-    email: EmailStr
-    current_password: str
-    new_password: str
 # --- SEDES ---
 class SedeCreate(BaseModel):
     nombre: str

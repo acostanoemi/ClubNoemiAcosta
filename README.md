@@ -14,14 +14,14 @@ notificaciones push sobre sus próximas reservas.
 | App móvil | Flutter |
 | Backend / API REST | Python + FastAPI |
 | Base de datos | PostgreSQL |
-| Autenticación | JWT + bcrypt |
+| Autenticación | Firebase Authentication (email y contraseña) |
 | Notificaciones push | Firebase Cloud Messaging |
 | Hosting | Render (API + base de datos) |
 | Documentación de la API | Swagger / OpenAPI (automática) |
 
 ## Funcionalidades
 
-- Registro, login y recuperación de contraseña (con token de verificación)
+- Registro, login, cambio y recuperación de contraseña con Firebase Authentication (el mail de recuperación lo manda Firebase)
 - Perfil de usuario: ver, editar (menos el email), dar de baja
 - Consultar sedes, sus horarios, y sus espacios deportivos
 - Filtrar espacios deportivos por tipo (Fútbol, Tenis, Hockey, Vóley, Golf)
