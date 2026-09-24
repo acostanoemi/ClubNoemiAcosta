@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'widgets/shared_widgets.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
@@ -232,34 +233,64 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
-      final response = await http.post(
-        Uri.parse('$apiBaseUrl/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+      // 1. Firebase valida email y contraseña.
+      final credencial = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+      final token = await credencial.user!.getIdToken();
+
+      // 2. Con ese token le pedimos al backend los datos del club.
+      final response = await http.get(
+        Uri.parse('$apiBaseUrl/auth/me'),
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       if (!mounted) return;
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         Session.set(
           id: data['id'],
           email: data['email'],
           nombre: data['nombre'],
           apellido: data['apellido'],
-          token: data['token'],
+          token: token!,
         );
         await Notifications.registrarToken(apiBaseUrl);
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
       } else {
-        final data = jsonDecode(response.body);
-        _showError(data['detail'] ?? 'No se pudo iniciar sesión');
+        // Firebase lo dejo entrar pero el club no (cuenta dada de baja
+        // o sin perfil): cerramos la sesion de Firebase tambien.
+        await FirebaseAuth.instance.signOut();
+        _showError(response.statusCode == 401
+            ? 'Esta cuenta fue dada de baja'
+            : 'No se pudo iniciar sesión');
       }
+    } on FirebaseAuthException catch (e) {
+      _showError(_mensajeFirebase(e.code));
     } catch (e) {
       _showError('Sin conexión con el servidor');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _mensajeFirebase(String codigo) {
+    switch (codigo) {
+      case 'invalid-email':
+        return 'El email no es válido';
+      case 'invalid-credential':
+      case 'user-not-found':
+      case 'wrong-password':
+        return 'Email o contraseña incorrectos';
+      case 'too-many-requests':
+        return 'Demasiados intentos. Probá de nuevo en unos minutos';
+      case 'user-disabled':
+        return 'Esta cuenta está deshabilitada';
+      case 'network-request-failed':
+        return 'Sin conexión';
+      default:
+        return 'No se pudo iniciar sesión';
     }
   }
 
