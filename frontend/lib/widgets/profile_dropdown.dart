@@ -172,7 +172,18 @@ class _ProfileDropdownState extends State<ProfileDropdown> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(color: colors.textMuted, fontSize: 13, fontFamily: 'Inter')),
-          Text(value, style: TextStyle(color: colors.textPrimary, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w600)),
+          const SizedBox(width: 12),
+          // Flexible + ellipsis: un email largo se corta con "..." en vez
+          // de desbordar la fila (la franja amarilla y negra).
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: TextStyle(color: colors.textPrimary, fontSize: 13, fontFamily: 'Inter', fontWeight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
