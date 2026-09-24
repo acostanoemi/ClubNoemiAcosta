@@ -242,6 +242,12 @@ def completar_perfil(datos: schemas.PerfilCreate, claims: dict = Depends(obtener
     db.refresh(cuenta)
     return cuenta
 
+@app.get("/auth/me", response_model=schemas.UsuarioResponse)
+def usuario_logueado(usuario_actual: models.Usuario = Depends(obtener_usuario_actual)):
+    """Devuelve los datos del usuario dueño del token. La app lo llama
+    justo despues de loguearse con Firebase, para saber su id y nombre."""
+    return usuario_actual
+
 @app.post("/auth/login")
 def login(credenciales: schemas.UsuarioLogin, db: Session = Depends(get_db)):
     # Limpiamos espacios en blanco accidentales de ambos lados
