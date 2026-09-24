@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/shared_widgets.dart';
 import '../theme/app_theme.dart';
-import '../session.dart';
-
-// Mismo host que el resto de las pantallas.
-const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 class CambiarContrasenaScreen extends StatefulWidget {
   const CambiarContrasenaScreen({super.key});
@@ -59,32 +54,49 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
       _errorActual = null;
     });
 
+    final usuario = FirebaseAuth.instance.currentUser;
+    if (usuario == null || usuario.email == null) {
+      // Sesion iniciada con el login viejo (antes de Firebase).
+      setState(() {
+        _loading = false;
+        _errorActual = 'Cerrá sesión y volvé a entrar para cambiar la contraseña.';
+      });
+      return;
+    }
+
     try {
-      // TODO: confirmar el path real del endpoint y cómo se identifica al
-      // usuario (Authorization: Bearer <token>, ya que el login todavía no
-      // guarda ningún token de sesión). Este body es una suposición.
-      final response = await http.put(
-        Uri.parse('$_apiBaseUrl/auth/change-password'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': Session.email,
-          'current_password': _actualController.text,
-          'new_password': _nuevaController.text,
-        }),
+      // Firebase pide volver a validar la contraseña actual antes de
+      // cambiarla (reautenticacion). Si es incorrecta, tira excepcion.
+      final credencial = EmailAuthProvider.credential(
+        email: usuario.email!,
+        password: _actualController.text,
       );
+      await usuario.reauthenticateWithCredential(credencial);
+      await usuario.updatePassword(_nuevaController.text);
 
       if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        Navigator.of(context).pop(true);
-        return;
+      Navigator.of(context).pop(true);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      final String mensaje;
+      switch (e.code) {
+        case 'invalid-credential':
+        case 'wrong-password':
+          mensaje = 'La contraseña actual no es correcta.';
+          break;
+        case 'too-many-requests':
+          mensaje = 'Demasiados intentos. Probá de nuevo en unos minutos.';
+          break;
+        case 'weak-password':
+          mensaje = 'La contraseña nueva es muy débil.';
+          break;
+        case 'network-request-failed':
+          mensaje = 'Sin conexión';
+          break;
+        default:
+          mensaje = 'No pudimos actualizar la contraseña. Intentá de nuevo.';
       }
-
-      if (response.statusCode == 401 || response.statusCode == 400) {
-        setState(() => _errorActual = 'La contraseña actual no es correcta. Te quedan 4 intentos.');
-      } else {
-        setState(() => _errorActual = 'No pudimos actualizar la contraseña. Intentá de nuevo.');
-      }
+      setState(() => _errorActual = mensaje);
     } catch (e) {
       if (!mounted) return;
       setState(() => _errorActual = 'Sin conexión con el servidor');
