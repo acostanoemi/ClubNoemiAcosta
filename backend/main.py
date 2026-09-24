@@ -115,6 +115,17 @@ def obtener_usuario_actual(authorization: str = Header(None), db: Session = Depe
         raise HTTPException(status_code=401, detail="Usuario no encontrado o inactivo")
     return usuario
 
+import secrets
+
+def requiere_admin(x_admin_key: str = Header(None)):
+    """Protege los endpoints que modifican sedes y espacios. La app no los
+    usa: se cargan datos a mano (curl, scripts), mandando el header
+    X-Admin-Key con el valor de ADMIN_API_KEY. Si la variable no esta
+    configurada, se rechaza todo."""
+    esperada = os.getenv("ADMIN_API_KEY")
+    if not esperada or not x_admin_key or not secrets.compare_digest(x_admin_key, esperada):
+        raise HTTPException(status_code=403, detail="No autorizado")
+
 # --- AUTENTICACIÓN ---
 
 @app.post("/auth/perfil", response_model=schemas.UsuarioResponse, status_code=status.HTTP_201_CREATED)
@@ -249,7 +260,7 @@ def obtener_sedes(db: Session = Depends(get_db)):
     return db.query(models.Sede).filter(models.Sede.activa == True).all()
 
 @app.post("/sedes", response_model=schemas.SedeResponse, status_code=status.HTTP_201_CREATED)
-def crear_sede(sede: schemas.SedeCreate, db: Session = Depends(get_db)):
+def crear_sede(sede: schemas.SedeCreate, db: Session = Depends(get_db), _: None = Depends(requiere_admin)):
     nueva_sede = models.Sede(**sede.model_dump())
     db.add(nueva_sede)
     db.commit()
@@ -257,7 +268,7 @@ def crear_sede(sede: schemas.SedeCreate, db: Session = Depends(get_db)):
     return nueva_sede
 
 @app.patch("/sedes/{sede_id}")
-def actualizar_sede(sede_id: UUID, datos: schemas.SedeUpdate, db: Session = Depends(get_db)):
+def actualizar_sede(sede_id: UUID, datos: schemas.SedeUpdate, db: Session = Depends(get_db), _: None = Depends(requiere_admin)):
     sede = db.query(models.Sede).filter(models.Sede.id == sede_id).first()
     if not sede:
         raise HTTPException(status_code=404, detail="Sede no encontrada")
@@ -278,7 +289,7 @@ def obtener_espacios(sede_id: Optional[UUID] = None, deporte: Optional[str] = No
     return query.all()
 
 @app.post("/espacios", response_model=schemas.EspacioResponse, status_code=status.HTTP_201_CREATED)
-def crear_espacio(espacio: schemas.EspacioCreate, db: Session = Depends(get_db)):
+def crear_espacio(espacio: schemas.EspacioCreate, db: Session = Depends(get_db), _: None = Depends(requiere_admin)):
     nuevo_espacio = models.EspacioDeportivo(**espacio.model_dump())
     db.add(nuevo_espacio)
     db.commit()
@@ -461,7 +472,7 @@ def cancelar_reserva(reserva_id: UUID, forzada: bool = False, usuario_actual: mo
     return {"message": "Reserva cancelada exitosamente"}
 
 @app.delete("/espacios/{espacio_id}")
-def eliminar_espacio(espacio_id: UUID, db: Session = Depends(get_db)):
+def eliminar_espacio(espacio_id: UUID, db: Session = Depends(get_db), _: None = Depends(requiere_admin)):
     espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == espacio_id).first()
     if not espacio:
         raise HTTPException(status_code=404, detail="Espacio no encontrado")
@@ -469,7 +480,7 @@ def eliminar_espacio(espacio_id: UUID, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Espacio eliminado"}
 @app.patch("/espacios/{espacio_id}")
-def actualizar_espacio(espacio_id: UUID, datos: schemas.EspacioUpdate, db: Session = Depends(get_db)):
+def actualizar_espacio(espacio_id: UUID, datos: schemas.EspacioUpdate, db: Session = Depends(get_db), _: None = Depends(requiere_admin)):
     espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == espacio_id).first()
     if not espacio:
         raise HTTPException(status_code=404, detail="Espacio no encontrado")
