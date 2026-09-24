@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/shared_widgets.dart';
 import '../theme/app_theme.dart';
 
@@ -89,44 +90,80 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _loading = true);
 
+    final email = _emailController.text.trim();
+    User? usuarioFirebase;
+
     try {
+      // 1. Firebase crea la cuenta (email + contraseña).
+      final credencial = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: _passwordController.text,
+      );
+      usuarioFirebase = credencial.user!;
+      final token = await usuarioFirebase.getIdToken();
+
+      // 2. El backend guarda los datos del club atados a ese uid.
       final response = await http.post(
-        Uri.parse('$_apiBaseUrl/auth/register'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$_apiBaseUrl/auth/perfil'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
         body: jsonEncode({
           'nombre': _nombreController.text.trim(),
           'apellido': _apellidoController.text.trim(),
           'dni': _dniController.text.trim(),
-          // TODO: confirmar contra el backend si espera 'YYYY-MM-DD' u otro formato.
           'fecha_nacimiento': _birthDate!.toIso8601String().split('T').first,
-          'email': _emailController.text.trim(),
-          'password': _passwordController.text,
         }),
       );
 
       if (!mounted) return;
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // createUser deja la sesion iniciada; se cierra para que el
+        // flujo siga igual que antes (cartel de exito y despues login).
+        await FirebaseAuth.instance.signOut();
         setState(() => _success = true);
         return;
       }
 
-      // TODO: confirmar el texto/código exacto que devuelve el backend para
-      // "usuario ya registrado" — por ahora se detecta por contenido del mensaje.
+      // El backend rechazo el perfil (ej. DNI repetido): se borra la
+      // cuenta de Firebase recien creada para no dejarla huerfana.
+      await usuarioFirebase.delete();
+
       String detail = 'No se pudo crear la cuenta';
       try {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         detail = data['detail'] ?? detail;
       } catch (_) {}
 
-      final isDuplicate = detail.toLowerCase().contains('registrad');
-
+      final dniRepetido = detail.toLowerCase().contains('dni');
       setState(() {
-        _errorBanner = isDuplicate ? 'Este usuario ya esta registrado' : detail;
-        _fieldErrors = isDuplicate ? {'dni', 'email'} : {};
+        _errorBanner = detail;
+        _fieldErrors = dniRepetido ? {'dni'} : {};
+      });
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        switch (e.code) {
+          case 'email-already-in-use':
+            _errorBanner = 'Este email ya está registrado';
+            _fieldErrors = {'email'};
+            break;
+          case 'invalid-email':
+            _errorBanner = 'El email no es válido';
+            _fieldErrors = {'email'};
+            break;
+          case 'weak-password':
+            _errorBanner = 'La contraseña es muy débil';
+            _fieldErrors = {'password'};
+            break;
+          default:
+            _errorBanner = 'No se pudo crear la cuenta';
+        }
       });
     } catch (e) {
-      setState(() => _errorBanner = 'Sin conexión con el servidor');
+      await usuarioFirebase?.delete();
+      if (mounted) setState(() => _errorBanner = 'Sin conexión con el servidor');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
