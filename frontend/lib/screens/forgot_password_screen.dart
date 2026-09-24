@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/shared_widgets.dart';
 import '../theme/app_theme.dart';
 import 'email_enviado_screen.dart';
-
-// Mismo host que main.dart usa para /auth/login y register_screen.dart para /auth/register.
-const String _apiBaseUrl = "https://https-club-noemi-acosta-backend-onrender.onrender.com";
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -61,35 +57,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final email = _emailController.text.trim();
 
     try {
-      final response = await http.post(
-        Uri.parse('$_apiBaseUrl/auth/recover-password'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email}),
-      );
+      // Firebase manda el mail con el enlace para elegir contraseña nueva.
+      // Por seguridad no avisa si el email no existe: la respuesta es la
+      // misma en los dos casos, asi nadie puede averiguar quien tiene cuenta.
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
       if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => EmailEnviadoScreen(email: email, resetToken: data['reset_token']),
-          ),
-        );
-        return;
-      }
-
-      // TODO: confirmar el texto/código exacto que devuelve el backend
-      // para "usuario no encontrado" — por ahora se muestra el detail tal cual.
-      String detail = 'No pudimos procesar la solicitud';
-      try {
-        final data = jsonDecode(response.body);
-        detail = data['detail'] ?? detail;
-      } catch (_) {}
-
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => EmailEnviadoScreen(email: email)),
+      );
+    } on FirebaseAuthException catch (e) {
       setState(() {
-        _errorBanner = detail;
-        _fieldErrors = {'email'};
+        _errorBanner = e.code == 'invalid-email'
+            ? 'Ingresá un email válido'
+            : 'No pudimos enviar el enlace. Probá de nuevo';
+        _fieldErrors = e.code == 'invalid-email' ? {'email'} : {};
       });
     } catch (e) {
       setState(() => _errorBanner = 'Sin conexión con el servidor');
