@@ -12,6 +12,12 @@ class UsuarioCreate(BaseModel):
     email: EmailStr
     password: str
 
+class PerfilCreate(BaseModel):
+    nombre: str
+    apellido: str
+    dni: str
+    fecha_nacimiento: date
+
 class UsuarioLogin(BaseModel):
     email: EmailStr
     password: str

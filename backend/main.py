@@ -9,7 +9,7 @@ from datetime import datetime, time, timedelta, date
 import models, schemas, database
 
 import firebase_admin
-from firebase_admin import credentials, messaging
+from firebase_admin import credentials, messaging, auth as firebase_auth
 
 if not firebase_admin._apps:
     ruta_credenciales = os.getenv("FIREBASE_CREDENTIALS_PATH", "firebase-credentials.json")
@@ -113,21 +113,49 @@ def crear_token(usuario_id) -> str:
     }
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
+def _extraer_bearer(authorization: Optional[str]) -> str:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="No autenticado")
+    return authorization[len("Bearer "):].strip()
+
+def obtener_claims_firebase(authorization: str = Header(None)) -> dict:
+    """Verifica un ID token de Firebase y devuelve sus datos (uid, email).
+    No busca el usuario en la base: se usa solo en /auth/perfil, que es
+    justamente donde el usuario todavia no tiene fila en 'usuarios'."""
+    token = _extraer_bearer(authorization)
+    try:
+        return firebase_auth.verify_id_token(token)
+    except firebase_auth.ExpiredIdTokenError:
+        raise HTTPException(status_code=401, detail="La sesion expiro, iniciá sesion de nuevo")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token invalido")
+
 def obtener_usuario_actual(authorization: str = Header(None), db: Session = Depends(get_db)) -> models.Usuario:
     """Dependencia que exige un token valido en el header Authorization
     (formato 'Bearer <token>') y devuelve el usuario autenticado.
-    Se usa en todos los endpoints que operan sobre usuarios o reservas,
-    segun lo pedido por la consigna."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="No autenticado")
-    token = authorization[len("Bearer "):].strip()
+
+    Durante la migracion acepta dos tipos de token:
+    1. ID token de Firebase (el nuevo): se busca el usuario por firebase_uid.
+    2. JWT propio (el viejo): se busca por id. TEMPORAL, se borra cuando
+       la app ya no use /auth/login."""
+    token = _extraer_bearer(authorization)
+    usuario = None
+
     try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-    except jwt.ExpiredSignatureError:
+        claims = firebase_auth.verify_id_token(token)
+        usuario = db.query(models.Usuario).filter(models.Usuario.firebase_uid == claims["uid"]).first()
+    except firebase_auth.ExpiredIdTokenError:
         raise HTTPException(status_code=401, detail="La sesion expiro, iniciá sesion de nuevo")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Token invalido")
-    usuario = db.query(models.Usuario).filter(models.Usuario.id == payload["sub"]).first()
+    except Exception:
+        # No es un token de Firebase: probamos con el JWT viejo (TEMPORAL)
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="La sesion expiro, iniciá sesion de nuevo")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Token invalido")
+        usuario = db.query(models.Usuario).filter(models.Usuario.id == payload["sub"]).first()
+
     if not usuario or not usuario.activo:
         raise HTTPException(status_code=401, detail="Usuario no encontrado o inactivo")
     return usuario
@@ -168,6 +196,51 @@ def registrar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_
     db.commit()
     db.refresh(nuevo_usuario)
     return nuevo_usuario
+
+@app.post("/auth/perfil", response_model=schemas.UsuarioResponse, status_code=status.HTTP_201_CREATED)
+def completar_perfil(datos: schemas.PerfilCreate, claims: dict = Depends(obtener_claims_firebase), db: Session = Depends(get_db)):
+    """Registro con Firebase: la cuenta (email + contraseña) ya la creo
+    Firebase desde la app. Aca solo se guardan los datos del club
+    (nombre, apellido, DNI, fecha de nacimiento) atados a ese uid.
+    El email sale del token verificado, no del body."""
+    uid = claims["uid"]
+    email = (claims.get("email") or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="La cuenta de Firebase no tiene email")
+
+    por_uid = db.query(models.Usuario).filter(models.Usuario.firebase_uid == uid).first()
+    if por_uid and por_uid.activo:
+        raise HTTPException(status_code=400, detail="El perfil ya existe")
+
+    por_email = db.query(models.Usuario).filter(models.Usuario.email.ilike(email)).first()
+    por_dni = db.query(models.Usuario).filter(models.Usuario.dni == datos.dni).first()
+
+    if por_email and por_email.activo and por_email.firebase_uid != uid:
+        raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado")
+    if por_dni and por_dni.activo and por_dni.firebase_uid != uid:
+        raise HTTPException(status_code=400, detail="El DNI ya está registrado")
+
+    # Igual que en el registro viejo: si coincide con una cuenta dada de
+    # baja, se reactiva esa fila y se conserva su historial de reservas.
+    cuenta = por_uid or por_email or por_dni
+    if cuenta and por_dni and por_dni.id != cuenta.id:
+        raise HTTPException(status_code=400, detail="El DNI ya está registrado")
+
+    if cuenta:
+        cuenta.nombre = datos.nombre
+        cuenta.apellido = datos.apellido
+        cuenta.dni = datos.dni
+        cuenta.fecha_nacimiento = datos.fecha_nacimiento
+        cuenta.email = email
+        cuenta.firebase_uid = uid
+        cuenta.activo = True
+    else:
+        cuenta = models.Usuario(**datos.model_dump(), email=email, firebase_uid=uid, password=None)
+        db.add(cuenta)
+
+    db.commit()
+    db.refresh(cuenta)
+    return cuenta
 
 @app.post("/auth/login")
 def login(credenciales: schemas.UsuarioLogin, db: Session = Depends(get_db)):
