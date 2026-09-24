@@ -369,6 +369,15 @@ def dar_de_baja_usuario(usuario_id: UUID, usuario_actual: models.Usuario = Depen
     if usuario_actual.id != usuario_id:
         raise HTTPException(status_code=403, detail="No autorizado")
     usuario_actual.activo = False
+    # Se borra la cuenta de Firebase para que el email quede libre: si la
+    # persona se vuelve a registrar, Firebase le crea una cuenta nueva y
+    # /auth/perfil reactiva esta misma fila (con su historial).
+    if usuario_actual.firebase_uid:
+        try:
+            firebase_auth.delete_user(usuario_actual.firebase_uid)
+        except firebase_auth.UserNotFoundError:
+            pass
+        usuario_actual.firebase_uid = None
     db.commit()
     return {"message": "Cuenta dada de baja"}
 
