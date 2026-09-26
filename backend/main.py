@@ -437,48 +437,66 @@ def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, usuario_ac
     db.refresh(reserva)
     return reserva
 
+def _cancelar_y_notificar(reserva: models.Reserva, forzada: bool, db: Session):
+    """Pasa la reserva a cancelada y avisa al dueño por push (si tiene
+    token FCM) y en su historial de notificaciones. 'forzada' es la unica
+    diferencia entre que cancele el propio socio o la administracion: solo
+    cambia el texto que recibe. Si el envio del push falla (token vencido,
+    sin conexion con Firebase, etc.) no rompe la cancelacion -- se loguea
+    y sigue."""
+    reserva.estado = "cancelada"
+    db.commit()
+
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == reserva.usuario_id).first()
+    if not usuario:
+        return
+    espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
+    sede = db.query(models.Sede).filter(models.Sede.id == espacio.sede_id).first() if espacio else None
+    deporte = espacio.deporte if espacio else "tu cancha"
+    nombre_sede = sede.nombre if sede else ""
+    lugar = f" en {nombre_sede}" if nombre_sede else ""
+    if forzada:
+        titulo = "Reserva cancelada por administración"
+        cuerpo = f"Tu reserva de {deporte}{lugar} fue cancelada por la administración."
+    else:
+        titulo = "Reserva cancelada"
+        cuerpo = f"Se canceló tu reserva de {deporte}{lugar}."
+
+    if usuario.fcm_token:
+        try:
+            mensaje = messaging.Message(
+                notification=messaging.Notification(title=titulo, body=cuerpo),
+                token=usuario.fcm_token,
+            )
+            messaging.send(mensaje)
+        except Exception as e:
+            print(f"No se pudo enviar la notificacion push: {e}")
+    crear_notificacion(db, usuario.id, titulo, cuerpo)
+
 @app.delete("/reservas/{reserva_id}")
-def cancelar_reserva(reserva_id: UUID, forzada: bool = False, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
+def cancelar_reserva(reserva_id: UUID, usuario_actual: models.Usuario = Depends(obtener_usuario_actual), db: Session = Depends(get_db)):
     reserva = db.query(models.Reserva).filter(models.Reserva.id == reserva_id).first()
     if not reserva:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
     if reserva.usuario_id != usuario_actual.id:
         raise HTTPException(status_code=403, detail="No autorizado")
 
-    reserva.estado = "cancelada"
-    db.commit()
-
-    # Notificar al usuario por push, si tiene un token FCM registrado.
-    # Si el envio falla (token vencido, sin conexion con Firebase, etc.)
-    # no debe romper la cancelacion en si -- solo se loguea el error.
-    # 'forzada' distingue si cancelo el propio usuario o la administracion.
-    usuario = db.query(models.Usuario).filter(models.Usuario.id == reserva.usuario_id).first()
-    if usuario and usuario.fcm_token:
-        espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
-        sede = db.query(models.Sede).filter(models.Sede.id == espacio.sede_id).first() if espacio else None
-        deporte = espacio.deporte if espacio else "tu cancha"
-        nombre_sede = sede.nombre if sede else ""
-        lugar = f" en {nombre_sede}" if nombre_sede else ""
-        if forzada:
-            titulo = "Reserva cancelada por administración"
-            cuerpo = f"Tu reserva de {deporte}{lugar} fue cancelada por la administración."
-        else:
-            titulo = "Reserva cancelada"
-            cuerpo = f"Se canceló tu reserva de {deporte}{lugar}."
-        try:
-            mensaje = messaging.Message(
-                notification=messaging.Notification(
-                    title=titulo,
-                    body=cuerpo,
-                ),
-                token=usuario.fcm_token,
-            )
-            messaging.send(mensaje)
-        except Exception as e:
-            print(f"No se pudo enviar la notificacion push: {e}")
-        crear_notificacion(db, usuario.id, titulo, cuerpo)
-
+    _cancelar_y_notificar(reserva, forzada=False, db=db)
     return {"message": "Reserva cancelada exitosamente"}
+
+@app.delete("/admin/reservas/{reserva_id}")
+def cancelar_reserva_forzada(reserva_id: UUID, db: Session = Depends(get_db), _: None = Depends(requiere_admin)):
+    """Cancela la reserva de cualquier socio. Requiere el header
+    X-Admin-Key, igual que crear/editar sedes y espacios. Uso desde
+    curl, no hay pantalla de administracion en la app."""
+    reserva = db.query(models.Reserva).filter(models.Reserva.id == reserva_id).first()
+    if not reserva:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    if reserva.estado == "cancelada":
+        raise HTTPException(status_code=400, detail="La reserva ya estaba cancelada")
+
+    _cancelar_y_notificar(reserva, forzada=True, db=db)
+    return {"message": "Reserva cancelada por administración"}
 
 @app.delete("/espacios/{espacio_id}")
 def eliminar_espacio(espacio_id: UUID, db: Session = Depends(get_db), _: None = Depends(requiere_admin)):
