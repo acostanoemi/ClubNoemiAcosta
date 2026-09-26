@@ -1,0 +1,22 @@
+# Pinguea el backend cada 10 minutos para que Render no lo duerma por
+# inactividad (el free tier duerme a los 15 min sin trafico). Si se
+# duerme, el scheduler de recordatorios de reserva (24hs antes) se
+# corta junto con el proceso y se pierden avisos.
+#
+# Ojo: en repos publicos con poco uso, GitHub a veces atrasa los
+# schedules varios minutos. No es 100% garantizado, pero alcanza para
+# mantener el servicio despierto la gran mayoria de las veces.
+
+name: Keep backend awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pinguear backend
+        run: curl -sf https://https-club-noemi-acosta-backend-onrender.onrender.com/ || true

@@ -70,6 +70,15 @@ def crear_notificacion(db: Session, usuario_id, titulo: str, cuerpo: str):
 
 app = FastAPI(title="API Club Noemí Acosta", version="1.0.0")
 
+@app.get("/")
+def estado():
+    """No consulta la base a proposito: la usa el workflow de GitHub
+    Actions (.github/workflows/keep-alive.yml) para pinguear el
+    servicio cada 10 minutos y que Render no lo duerma por
+    inactividad. Si durmiera, el scheduler de recordatorios de
+    reserva se corta con el, y se pierden avisos."""
+    return {"status": "ok"}
+
 # Permitir peticiones desde el Frontend en Flutter
 app.add_middleware(
     CORSMiddleware,
