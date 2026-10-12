@@ -1,6 +1,7 @@
 ﻿import os
 from fastapi import FastAPI, HTTPException, Depends, status, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
@@ -96,12 +97,17 @@ def get_db():
     finally:
         db.close()
 
-def _extraer_bearer(authorization: Optional[str]) -> str:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="No autenticado")
-    return authorization[len("Bearer "):].strip()
+# Estos dos esquemas no cambian como se autentica nada: solo hacen que
+# Swagger muestre el boton "Authorize" para pegar el token o la admin key.
+esquema_bearer = HTTPBearer(auto_error=False)
+esquema_admin = APIKeyHeader(name="X-Admin-Key", auto_error=False)
 
-def obtener_claims_firebase(authorization: str = Header(None)) -> dict:
+def _extraer_bearer(credenciales: Optional[HTTPAuthorizationCredentials]) -> str:
+    if not credenciales or credenciales.scheme.lower() != "bearer" or not credenciales.credentials.strip():
+        raise HTTPException(status_code=401, detail="No autenticado")
+    return credenciales.credentials.strip()
+
+def obtener_claims_firebase(authorization: Optional[HTTPAuthorizationCredentials] = Depends(esquema_bearer)) -> dict:
     """Verifica un ID token de Firebase y devuelve sus datos (uid, email).
     No busca el usuario en la base: se usa solo en /auth/perfil, que es
     justamente donde el usuario todavia no tiene fila en 'usuarios'."""
@@ -113,7 +119,7 @@ def obtener_claims_firebase(authorization: str = Header(None)) -> dict:
     except Exception:
         raise HTTPException(status_code=401, detail="Token invalido")
 
-def obtener_usuario_actual(authorization: str = Header(None), db: Session = Depends(get_db)) -> models.Usuario:
+def obtener_usuario_actual(authorization: Optional[HTTPAuthorizationCredentials] = Depends(esquema_bearer), db: Session = Depends(get_db)) -> models.Usuario:
     """Dependencia que exige un ID token de Firebase valido en el header
     Authorization (formato 'Bearer <token>') y devuelve el usuario del club
     atado a ese uid. Se usa en todos los endpoints que operan sobre
@@ -126,7 +132,7 @@ def obtener_usuario_actual(authorization: str = Header(None), db: Session = Depe
 
 import secrets
 
-def requiere_admin(x_admin_key: str = Header(None)):
+def requiere_admin(x_admin_key: Optional[str] = Depends(esquema_admin)):
     """Protege los endpoints que modifican sedes y espacios. La app no los
     usa: se cargan datos a mano (curl, scripts), mandando el header
     X-Admin-Key con el valor de ADMIN_API_KEY. Si la variable no esta
