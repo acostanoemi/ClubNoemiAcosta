@@ -1,9 +1,13 @@
-﻿fastapi
-uvicorn[standard]
-sqlalchemy
-psycopg2-binary
-python-dotenv
-pydantic
-email-validator
-firebase-admin
-apscheduler
+# Versiones fijas: son las que instalo Render en el ultimo build que anduvo.
+# Sin fijarlas, cada deploy baja la ultima version de cada paquete, y una
+# actualizacion (como SQLAlchemy 2.1, el 2/10) puede romper el build.
+# Para actualizar: cambiar la version, probar local, y recien ahi pushear.
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+sqlalchemy==2.1.2
+psycopg2-binary==2.9.13
+python-dotenv==1.2.4
+pydantic==2.13.5
+email-validator==2.3.0
+firebase-admin==7.7.0
+apscheduler==3.11.3
