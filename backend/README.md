@@ -40,7 +40,7 @@ cp .env.example .env
 ## 3. Credenciales de Firebase
 
 Descargar el archivo de credenciales de servicio desde Firebase Console
-(**⚙️ Configuración del proyecto → Cuentas de servicio → Generar nueva
+(** Configuración del proyecto → Cuentas de servicio → Generar nueva
 clave privada**) y guardarlo en la raíz de `backend/` con el nombre
 `firebase-credentials.json`. Este archivo no se sube al repositorio
 (está en `.gitignore`) porque contiene credenciales privadas.
@@ -76,14 +76,18 @@ backend/
 |-- database.py                # Configuracion de conexion a PostgreSQL
 |-- crear_tablas.py            # Script para crear las tablas desde cero
 |-- firebase-credentials.json  # Credenciales de Firebase (no versionado)
-`-- requirements.txt           # Dependencias de Python
+|-- requirements.txt           # Dependencias de Python
+`-- scripts_historicos/        # Scripts puntuales de migracion y carga de datos
 ```
 
-Los archivos `patch_*.py`, `migrate_*.py`, `fix_*.py/.sh/.ps1` y
-`seed.py` son scripts puntuales usados durante el desarrollo para
-migrar la base de datos o corregir datos ya cargados; no son necesarios
-para levantar el proyecto desde cero y quedan documentados acá solo
-como registro histórico del desarrollo.
+Los scripts puntuales usados durante el desarrollo (`patch_*`,
+`migrate_*`, `fix_*`, `seed.py` e `importar_usuarios_firebase.py`) estan
+en `scripts_historicos/`. No hacen falta para levantar el proyecto desde
+cero: las tablas salen de `models.py` con `crear_tablas.py`. Quedan como
+registro del desarrollo. Ojo con `seed.py`: borra y recrea todas las
+tablas, no correrlo contra una base con datos. Los que importan
+`database` o `models` se corren desde `backend/` con
+`PYTHONPATH=. python scripts_historicos/<script>.py`.
 
 ## Despliegue en la nube
 
