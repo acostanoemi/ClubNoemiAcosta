@@ -48,7 +48,8 @@ def revisar_recordatorios_24hs():
                     nombre_sede = sede.nombre if sede else ""
                     lugar = f" en {nombre_sede}" if nombre_sede else ""
                     hora = reserva.hora_inicio.strftime("%H:%M")
-                    cuerpo = f"Tenés una reserva de {deporte}{lugar} mañana a las {hora}."
+                    dia = "hoy" if reserva.fecha == ahora.date() else "mañana"
+                    cuerpo = f"Tenés una reserva de {deporte}{lugar} {dia} a las {hora}."
                     try:
                         mensaje = messaging.Message(
                             notification=messaging.Notification(
