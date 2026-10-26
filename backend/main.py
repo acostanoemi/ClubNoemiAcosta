@@ -5,7 +5,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHea
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
-from datetime import datetime, time, timedelta, date
+from datetime import datetime, time, timedelta, date, timezone
 
 import models, schemas, database
 
@@ -19,12 +19,19 @@ if not firebase_admin._apps:
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
+def ahora_argentina():
+    """Hora actual de Argentina (UTC-3, sin horario de verano), sin zona
+    horaria asociada. El servidor de Render trabaja en UTC, pero las
+    reservas se guardan en hora local argentina; comparar contra la hora
+    del servidor corria todos los chequeos 3 horas."""
+    return datetime.now(timezone(timedelta(hours=-3))).replace(tzinfo=None)
+
 def revisar_recordatorios_24hs():
     """Busca reservas confirmadas que arrancan dentro de las proximas 24hs
     y que todavia no fueron notificadas, y les manda un push recordatorio."""
     db = database.SessionLocal()
     try:
-        ahora = datetime.now()
+        ahora = ahora_argentina()
         limite = ahora + timedelta(hours=24)
         reservas = db.query(models.Reserva).filter(
             models.Reserva.estado == "confirmada",
@@ -337,7 +344,7 @@ def crear_reserva(reserva: schemas.ReservaCreate, usuario_actual: models.Usuario
     if duracion < 1:
         raise HTTPException(status_code=400, detail="La reserva debe durar como mínimo 1 hora")
 
-    if datetime.combine(reserva.fecha, reserva.hora_inicio) < datetime.now() + timedelta(hours=2):
+    if datetime.combine(reserva.fecha, reserva.hora_inicio) < ahora_argentina() + timedelta(hours=2):
         raise HTTPException(status_code=400, detail="La reserva debe hacerse con al menos 2 horas de anticipacion")
 
     espacio = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == reserva.espacio_id).first()
@@ -401,7 +408,7 @@ def modificar_reserva(reserva_id: UUID, datos: schemas.ReservaUpdate, usuario_ac
     if duracion < 1:
         raise HTTPException(status_code=400, detail="La reserva debe durar como minimo 1 hora")
 
-    if datetime.combine(nueva_fecha, nueva_hora_inicio) < datetime.now() + timedelta(hours=2):
+    if datetime.combine(nueva_fecha, nueva_hora_inicio) < ahora_argentina() + timedelta(hours=2):
         raise HTTPException(status_code=400, detail="La reserva debe hacerse con al menos 2 horas de anticipacion")
 
     espacio_nuevo = db.query(models.EspacioDeportivo).filter(models.EspacioDeportivo.id == nuevo_espacio_id).first()
