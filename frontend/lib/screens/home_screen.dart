@@ -513,13 +513,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(padding: const EdgeInsets.symmetric(vertical: 40), child: Center(child: CircularProgressIndicator(color: colors.accent)))
                 else if (_error != null)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                    child: Column(
-                      children: [
-                        Text(_error!, style: TextStyle(color: Colors.red[300], fontFamily: 'Inter')),
-                        const SizedBox(height: 8),
-                        TextButton(onPressed: _cargarDatos, child: Text('Reintentar', style: TextStyle(color: colors.accentText))),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(Icons.wifi_off_rounded, color: Colors.red[300], size: 32),
+                          const SizedBox(height: 12),
+                          Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: Colors.red[300], fontFamily: 'Inter')),
+                          const SizedBox(height: 8),
+                          TextButton(onPressed: _cargarDatos, child: Text('Reintentar', style: TextStyle(color: colors.accentText))),
+                        ],
+                      ),
                     ),
                   )
                 else if (_sedesFiltradas.isEmpty)

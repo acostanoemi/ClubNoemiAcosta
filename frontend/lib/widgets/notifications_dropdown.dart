@@ -115,7 +115,7 @@ class _NotificationsDropdownState extends State<NotificationsDropdown> {
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(_error!, style: TextStyle(color: colors.textMuted, fontSize: 13, fontFamily: 'Inter')),
+                child: Center(child: Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: colors.textMuted, fontSize: 13, fontFamily: 'Inter'))),
               )
             else if (_notificaciones.isEmpty)
               Padding(
